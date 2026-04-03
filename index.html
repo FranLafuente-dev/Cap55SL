@@ -1,45 +1,221 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Finanzas Personales</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; style-src * 'unsafe-inline';">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cap55SL - Finanzas</title>
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Finanzas">
-<link rel="apple-touch-icon" href="icono.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finanzas">
+    <link rel="apple-touch-icon" href="icono.png">
+    <link rel="manifest" href="manifest.json">
 
-<link rel="manifest" href="manifest.json">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #ffffff; --bg2: #f5f5f3; --bg3: #eeece6;
+            --text: #1a1a18; --text2: #73726c; --text3: #9c9a92;
+            --border: rgba(0,0,0,0.12);
+            --success: #3B6D11; --success-bg: #EAF3DE;
+            --danger: #A32D2D; --danger-bg: #FCEBEB;
+            --warning: #854F0B; --warning-bg: #FAEEDA;
+            --r: 8px; --rl: 12px;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+                --text: #e8e6de; --text2: #9c9a92; --text3: #6e6d68;
+                --border: rgba(255,255,255,0.11);
+                --success: #97C459; --success-bg: #173404;
+                --danger: #F09595; --danger-bg: #501313;
+                --warning: #EF9F27; --warning-bg: #412402;
+            }
+        }
+        body { 
+            font-family: system-ui,-apple-system,sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            padding: 1rem; 
+            padding-top: calc(1rem + env(safe-area-inset-top)); 
+            max-width: 740px; 
+            margin: 0 auto; 
+            font-size: 14px; 
+        }
+        h1 { font-size: 17px; font-weight: 500; margin-bottom: 1.25rem; }
+        h1 small { font-size: 12px; font-weight: 400; color: var(--text2); margin-left: 6px; }
+        .tabs { display: flex; gap: 2px; margin-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab { padding: 8px 14px; font-size: 13px; cursor: pointer; border: none; background: none; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
+        .tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px,1fr)); gap: 8px; margin-bottom: 1rem; }
+        .metric { background: var(--bg2); border-radius: var(--r); padding: 11px 13px; }
+        .metric-label { font-size: 10px; color: var(--text2); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .5px; }
+        .metric-value { font-size: 18px; font-weight: 500; }
+        .green { color: var(--success); }
+        .red { color: var(--danger); }
+        .orange { color: var(--warning); }
+        .st { font-size: 11px; font-weight: 500; color: var(--text2); margin: 1rem 0 7px; text-transform: uppercase; letter-spacing: .5px; }
+        .alert { padding: 9px 13px; border-radius: var(--r); font-size: 13px; margin-bottom: 1rem; }
+        .alert-ok { background: var(--success-bg); color: var(--success); border: 0.5px solid var(--success); }
+        .alert-warn { background: var(--warning-bg); color: var(--warning); border: 0.5px solid var(--warning); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 7px 9px; font-size: 10px; font-weight: 500; color: var(--text2); border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: .4px; }
+        td { padding: 8px 9px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
+        .tag { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .tag-alimentos { background:#EAF3DE;color:#3B6D11; }
+        .tag-salud { background:#E6F1FB;color:#185FA5; }
+        .tag-impuestos { background:#FAEEDA;color:#854F0B; }
+        .tag-delfi { background:#FBEAF0;color:#993556; }
+        .tag-servicios { background:#EEEDFE;color:#534AB7; }
+        .tag-ingreso { background:#EAF3DE;color:#3B6D11; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        input, select { width: 100%; padding: 10px; border: 0.5px solid var(--border); border-radius: var(--r); background: var(--bg); color: var(--text); font-size: 16px; /* 16px evita el zoom automatico en iOS */ }
+        .btn { padding: 12px 16px; border-radius: var(--r); cursor: pointer; font-size: 14px; font-weight: 500; width: 100%; border: none; background: var(--text); color: var(--bg); }
+        .chart-wrap { position: relative; width: 100%; height: 240px; margin: 0.5rem 0 1rem; }
+        .pochi-card { background: var(--bg2); border-radius: var(--r); padding: 12px 14px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .pochi-val { font-size: 20px; font-weight: 500; color: var(--warning); }
+        .pend-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 9px 10px; border-bottom: 0.5px solid var(--border); }
+        .box { border: 0.5px solid var(--border); border-radius: var(--r); overflow: hidden; }
+    </style>
+</head>
+<body>
+
+<h1>FS Finanzas <small id="mes-label"></small></h1>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab" onclick="switchTab('gastos')">Gastos</button>
+    <button class="tab" onclick="switchTab('ingresos')">Ingresos</button>
+    <button class="tab" onclick="switchTab('pendientes')">Pendientes</button>
+    <button class="tab" onclick="switchTab('cargar')">+ Cargar</button>
+</div>
+
+<div id="tab-dashboard" class="panel active">
+    <div class="metric-grid" id="metrics"></div>
+    <div id="saldo-alert"></div>
+    <div class="st">Tarjeta Pochi</div>
+    <div class="pochi-card">
+        <div><div class="metric-label">Saldo a pagar</div><div class="pochi-val" id="pochi-display">$0</div></div>
+        <input style="width:100px" type="number" id="pochi-input" placeholder="0" oninput="savePochi(this.value)">
+    </div>
+    <div class="st">Gastos del mes</div>
+    <div id="pie-legend" class="metric-grid" style="font-size:10px"></div>
+    <div class="chart-wrap"><canvas id="chartPie"></canvas></div>
+    <div class="st">Últimos movimientos</div>
+    <div id="recent-table"></div>
+</div>
+
+<div id="tab-gastos" class="panel">
+    <div id="gastos-table-wrap"></div>
+</div>
+
+<div id="tab-ingresos" class="panel">
+    <div id="ingresos-table-wrap"></div>
+</div>
+
+<div id="tab-pendientes" class="panel">
+    <div id="pend-list"></div>
+    <div class="st">Agregar pendiente</div>
+    <input type="text" id="pend-concepto" placeholder="Concepto" style="margin-bottom:8px">
+    <input type="number" id="pend-monto" placeholder="Monto" style="margin-bottom:8px">
+    <button class="btn" onclick="agregarPendiente()">Agregar</button>
+</div>
+
+<div id="tab-cargar" class="panel">
+    <div class="form-row">
+        <input type="number" id="f-monto" placeholder="Monto ARS">
+        <select id="f-tipo" onchange="toggleCat()">
+            <option value="gasto">Gasto</option>
+            <option value="ingreso">Ingreso</option>
+        </select>
+    </div>
+    <input type="text" id="f-concepto" placeholder="Concepto" style="margin-bottom:8px">
+    <select id="f-cat" style="margin-bottom:12px"></select>
+    <button class="btn" onclick="cargarMovimiento()">Guardar Movimiento</button>
+    <div id="form-msg" style="margin-top:10px; text-align:center"></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-<style>
-/* He mantenido tu estilo original y ajustado el padding superior para la barra de iOS */
-body { 
-    font-family: system-ui,-apple-system,sans-serif; 
-    background: var(--bg); 
-    color: var(--text); 
-    padding: 1rem; 
-    padding-top: env(safe-area-inset-top); /* Evita que la notch tape el titulo */
-    max-width: 740px; 
-    margin: 0 auto; 
-    font-size: 14px; 
-}
-/* ... (Todo tu CSS original aquí debajo) ... */
-</style>
-
 <script>
-// Registro del Service Worker para funcionamiento Offline
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('App lista para usar offline'))
-      .catch(err => console.log('Error en registro', err));
-  });
+const CATS = ['Alimentos','Salud','Impuestos','Delfi','Servicios','Transporte','Ropa','Entretenimiento','Educación','Hogar','Otros'];
+const PIE_COLORS = ['#639922','#185FA5','#BA7517','#993556','#534AB7','#0F6E56','#993C1D','#3C3489','#0C447C','#633806','#5F5E5A'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+let data = JSON.parse(localStorage.getItem('fs_data')) || [];
+let pend = JSON.parse(localStorage.getItem('fs_pend')) || [];
+let pieChart = null;
+
+function save(){ localStorage.setItem('fs_data', JSON.stringify(data)); localStorage.setItem('fs_pend', JSON.stringify(pend)); }
+function fmt(n){ return '$'+Math.round(n).toLocaleString('es-AR'); }
+
+function switchTab(t){
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(t)));
+    document.getElementById('tab-'+t).classList.add('active');
+    if(t==='dashboard') renderDashboard();
+    if(t==='gastos') renderGastos();
+    if(t==='ingresos') renderIngresos();
+    if(t==='pendientes') renderPendientes();
 }
 
-// ... (Todo tu JavaScript original de finanzas aquí debajo) ...
+function cargarMovimiento(){
+    const m = parseFloat(document.getElementById('f-monto').value);
+    const c = document.getElementById('f-concepto').value;
+    const t = document.getElementById('f-tipo').value;
+    const cat = t === 'gasto' ? document.getElementById('f-cat').value : 'Ingreso';
+    if(!m || !c) return;
+    data.push({id:Date.now(), tipo:t, monto:m, concepto:c, cat:cat, fecha:new Date().toISOString().split('T')[0]});
+    save();
+    document.getElementById('f-monto').value = '';
+    document.getElementById('f-concepto').value = '';
+    document.getElementById('form-msg').innerText = '✓ Guardado';
+    setTimeout(()=>document.getElementById('form-msg').innerText='', 2000);
+}
+
+function renderDashboard(){
+    const totalG = data.filter(d=>d.tipo==='gasto').reduce((s,d)=>s+d.monto,0);
+    const totalI = data.filter(d=>d.tipo==='ingreso').reduce((s,d)=>s+d.monto,0);
+    const pochi = parseFloat(localStorage.getItem('fs_pochi')) || 0;
+    const totalP = pend.reduce((s,p)=>s+p.monto,0) + pochi;
+    
+    document.getElementById('metrics').innerHTML = `
+        <div class="metric"><div class="metric-label">Ingresos</div><div class="metric-value green">${fmt(totalI)}</div></div>
+        <div class="metric"><div class="metric-label">Gastos</div><div class="metric-value red">${fmt(totalG)}</div></div>
+        <div class="metric"><div class="metric-label">Pendientes</div><div class="metric-value orange">${fmt(totalP)}</div></div>
+    `;
+
+    // Grafico
+    const ctx = document.getElementById('chartPie');
+    if(pieChart) pieChart.destroy();
+    const gMes = data.filter(d=>d.tipo==='gasto');
+    const cats = {};
+    gMes.forEach(g => cats[g.cat] = (cats[g.cat]||0) + g.monto);
+    
+    pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(cats),
+            datasets: [{ data: Object.values(cats), backgroundColor: PIE_COLORS }]
+        },
+        options: { plugins: { legend: { display: false } } }
+    });
+}
+
+function savePochi(v){ localStorage.setItem('fs_pochi', v); renderDashboard(); }
+function toggleCat(){ document.getElementById('f-cat').style.display = document.getElementById('f-tipo').value === 'gasto' ? 'block' : 'none'; }
+
+// Init
+document.getElementById('f-cat').innerHTML = CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+document.getElementById('mes-label').innerText = MESES[new Date().getMonth()];
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+renderDashboard();
 </script>
+
 </body>
 </html>
