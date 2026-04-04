@@ -648,11 +648,28 @@ body {
       <div class="pochi-icon">💳</div>
       <div>
         <div class="pochi-label">Tarjeta Pochi</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">Descuenta del déficit</div>
       </div>
     </div>
-    <input class="pochi-input" type="number" id="pochi-input" placeholder="0"
-      oninput="savePochi()" onblur="renderInicio()">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="pochi-display" style="font-size:20px;font-weight:700;color:#CF8EF4;letter-spacing:-0.5px">$0</div>
+      <button onclick="abrirEditPochi()" style="width:30px;height:30px;border-radius:50%;background:rgba(191,90,242,0.18);border:1px solid rgba(191,90,242,0.3);color:#BF5AF2;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✏️</button>
+    </div>
+  </div>
+
+  <!-- Modal inline Pochi -->
+  <div class="modal-overlay" id="modal-pochi">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Tarjeta Pochi</div>
+      <div class="field">
+        <div class="field-label">Monto (ARS)</div>
+        <input type="number" id="pochi-input" placeholder="0" inputmode="decimal" style="font-size:22px;font-weight:700;">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="cerrarEditPochi()">Cancelar</button>
+        <button class="modal-save" onclick="guardarPochi()">Guardar</button>
+      </div>
+    </div>
   </div>
 
   <div class="deficit-chip">
@@ -1009,10 +1026,20 @@ function setHeaderDate() {
 }
 
 // ── POCHI ──────────────────────────────────────────────────────────────────────
-function savePochi() {
+function abrirEditPochi() {
+  document.getElementById('pochi-input').value = pochiMonto || '';
+  document.getElementById('modal-pochi').classList.add('visible');
+  setTimeout(() => document.getElementById('pochi-input').focus(), 200);
+}
+function cerrarEditPochi() {
+  document.getElementById('modal-pochi').classList.remove('visible');
+}
+function guardarPochi() {
   const val = parseFloat(document.getElementById('pochi-input').value) || 0;
   pochiMonto = val;
   localStorage.setItem(K.pochi, val);
+  cerrarEditPochi();
+  renderInicio();
 }
 
 // ── SELECTS ────────────────────────────────────────────────────────────────────
@@ -1234,8 +1261,8 @@ let pieChart = null;
 function renderInicio() {
   checkCierreMes();
 
-  // Sincronizar input Pochi
-  document.getElementById('pochi-input').value = pochiMonto || '';
+  // Mostrar monto Pochi
+  document.getElementById('pochi-display').textContent = fmt(pochiMonto);
 
   const ym = nowYM();
   const gastos = data.filter(d => d.tipo === 'gasto' && d.fecha.startsWith(ym));
@@ -1489,9 +1516,18 @@ function renderResumen() {
   actualizarHighlight(catMap);
 
   const det = document.getElementById('res-detalle');
-  det.innerHTML = gastos.length
+  const gastosHTML = gastos.length
     ? gastos.sort((a, b) => b.monto - a.monto).map(d => rowHTML(d, false, false)).join('')
-    : '<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin gastos este mes</div>';
+    : '<div style="padding:16px;text-align:center;color:var(--text2);font-size:14px">Sin gastos este mes</div>';
+  const ingresosHTML = ingresos.length
+    ? ingresos.sort((a, b) => b.monto - a.monto).map(d => rowHTML(d, false, false)).join('')
+    : '<div style="padding:16px;text-align:center;color:var(--text2);font-size:14px">Sin ingresos este mes</div>';
+  det.innerHTML = `
+    <div style="padding:10px 16px 6px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--sep)">Gastos</div>
+    ${gastosHTML}
+    <div style="padding:10px 16px 6px;font-size:11px;font-weight:700;color:rgba(50,215,75,0.8);text-transform:uppercase;letter-spacing:.5px;border-top:0.5px solid var(--sep);border-bottom:0.5px solid var(--sep);margin-top:4px">Ingresos</div>
+    ${ingresosHTML}
+  `;
 }
 
 function filtrarResCat(cat, btn) {
