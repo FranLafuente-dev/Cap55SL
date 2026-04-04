@@ -672,21 +672,18 @@ body {
     </div>
   </div>
 
-  <div class="deficit-chip">
-    <div>
-      <div class="deficit-label">Déficit / Superávit real</div>
-      <div style="font-size:11px;color:var(--text2);margin-top:1px">descontando pendientes y Pochi</div>
-    </div>
-    <div class="deficit-val" id="deficit-val">$0</div>
-  </div>
-
   <!-- Pendientes — solo total, clickeable -->
   <div class="pend-dash-simple" onclick="switchPanel('pendientes', document.querySelectorAll('.nav-item')[2])">
-    <div>
-      <div class="pend-dash-title">Pendientes de pago</div>
-      <div class="pend-dash-title-sub">Tocá para ver detalle →</div>
+    <div class="pend-dash-title">Pendientes de pago</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="pend-dash-total" id="pend-dash-total">$0</div>
+      <span style="color:var(--text2);font-size:18px;line-height:1">›</span>
     </div>
-    <div class="pend-dash-total" id="pend-dash-total">$0</div>
+  </div>
+
+  <div class="deficit-chip">
+    <div class="deficit-label">Déficit / Superávit real</div>
+    <div class="deficit-val" id="deficit-val">$0</div>
   </div>
 
   <div class="card-title" id="torta-title">Gastos del mes</div>
