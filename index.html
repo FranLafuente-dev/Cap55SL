@@ -113,7 +113,7 @@ body {
 .info-row-left { display: flex; align-items: center; gap: 10px; }
 .info-row-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .info-row-label { font-size: 13px; font-weight: 600; letter-spacing: .2px; }
-.info-row-right { display: flex; align-items: center; gap: 8px; }
+.info-row-right { display: flex; align-items: center; gap: 8px; flex-direction: row-reverse; }
 .info-row-amount { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
 .info-row-btn { width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; transition: background .15s; }
 
@@ -422,7 +422,6 @@ body {
     <div class="segment">
       <button class="seg-btn active-gasto" id="seg-gasto" onclick="setTipo('gasto')">Gasto</button>
       <button class="seg-btn" id="seg-ingreso" onclick="setTipo('ingreso')">Ingreso</button>
-      <button class="seg-btn" id="seg-pendiente" onclick="setTipo('pendiente')">Pendiente</button>
       <button class="seg-btn" id="seg-enano" onclick="setTipo('enano')">Enano</button>
       <button class="seg-btn" id="seg-ahorros" onclick="setTipo('ahorros')">Ahorros</button>
     </div>
@@ -583,7 +582,7 @@ body {
     <span class="nav-label">Movimientos</span>
   </button>
   <button class="fab" onclick="switchPanel('cargar',null)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="26" height="26"><path d="M12 4v16M4 12h16"/></svg>
   </button>
   <button class="nav-item" onclick="switchPanel('pendientes',this)">
     <span class="nav-icon"><svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
@@ -1291,7 +1290,7 @@ function setTipo(t) {
   document.getElementById('tipo-icon-emoji').textContent=cfg.emoji;
   document.getElementById('tipo-icon-wrap').style.background=cfg.color;
   document.getElementById('cargar-tipo-title').textContent=cfg.label;
-  ['gasto','ingreso','pendiente','enano','ahorros'].forEach(x=>{
+  ['gasto','ingreso','enano','ahorros'].forEach(x=>{
     const btn=document.getElementById('seg-'+x);
     btn.className='seg-btn'+(x===t?' '+TIPO_CONFIG[x].cls:'');
   });
@@ -1301,6 +1300,10 @@ function setTipo(t) {
   if(['gasto','ingreso','pendiente'].includes(t)){
     document.getElementById('cat-field').style.display=t==='ingreso'?'none':'';
     document.getElementById('neg-hint').style.display=t==='ingreso'?'block':'none';
+    if(t==='ingreso'){
+      var fc=document.getElementById('f-concepto');
+      if(!fc.value||fc.value==='')fc.value='Venta';
+    }
   }
 }
 
@@ -1673,6 +1676,22 @@ function descargarResumenPDF(){
   if(!win){const a=document.createElement('a');a.href=url;a.download='MisFinanzas_'+mesNombre.replace(' ','_')+'.html';a.click();}
 }
 
+// ── SWIPE BACK ──
+(function(){
+  var startX=0, startY=0;
+  document.addEventListener('touchstart',function(e){startX=e.touches[0].clientX;startY=e.touches[0].clientY;},{passive:true});
+  document.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-startX;
+    var dy=Math.abs(e.changedTouches[0].clientY-startY);
+    if(dx>80&&dy<60&&startX<40){
+      var active=document.querySelector('.panel.active');
+      if(active&&active.id==='panel-detalle'){switchPanel('inicio',document.querySelector('.nav-item'));}
+      else if(active&&active.id==='panel-movimientos'){switchPanel('inicio',document.querySelectorAll('.nav-item')[0]);}
+      else if(active&&active.id==='panel-cargar'){switchPanel('inicio',document.querySelectorAll('.nav-item')[0]);}
+    }
+  },{passive:true});
+})();
+
 // ── INIT ──
 window._initApp=function(){
   setHeaderDate();
@@ -1685,8 +1704,14 @@ setTimeout(()=>{if(!window._fbReady){window._fbReady=true;window._initApp();}},5
 </script>
 
 <script>
+// ── PWA INSTALL ──
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  window._installPrompt=e;
+});
+
 if('serviceWorker' in navigator){
-  const swCode=`const CACHE='mis-finanzas-v4';const URLS=[self.location.pathname];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
+  const swCode=`const CACHE='mis-finanzas-v5';const URLS=[self.location.pathname];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
   const blob=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
