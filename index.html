@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com data: blob:;">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mis Finanzas">
-<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#00153d">
 <title>Mis Finanzas</title>
@@ -15,211 +14,1950 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* [Tus estilos CSS se mantienen igual para no romper el diseño] */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root { --bg: #00153d; --bg2: #001a4a; --card: rgba(255,255,255,0.07); --text: #FFFFFF; --text2: rgba(255,255,255,0.55); --border: rgba(255,255,255,0.11); --blue: #4D9FFF; --green: #32D74B; --red: #FF453A; --orange: #FF9F0A; --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); }
+
+:root {
+  --bg: #00153d;
+  --bg2: #001a4a;
+  --card: rgba(255,255,255,0.07);
+  --card-solid: #071e52;
+  --text: #FFFFFF;
+  --text2: rgba(255,255,255,0.55);
+  --text3: rgba(255,255,255,0.22);
+  --border: rgba(255,255,255,0.11);
+  --sep: rgba(255,255,255,0.06);
+  --blue: #4D9FFF;
+  --green: #32D74B;
+  --red: #FF453A;
+  --orange: #FF9F0A;
+  --purple: #BF5AF2;
+  --teal: #5AC8FA;
+  --accent: #4D9FFF;
+  --r: 16px;
+  --rl: 22px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 html { background: var(--bg); }
-body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; padding-bottom: calc(90px + var(--safe-bottom)); }
-.header { padding: calc(52px + var(--safe-top)) 20px 8px; background: var(--bg); position: sticky; top: 0; z-index: 100; }
-.header-greeting { font-size: 13px; color: var(--text2); }
-.app-title { font-size: 26px; font-weight: 700; color: #fff; }
-.hero { background: linear-gradient(135deg, rgba(77,159,255,0.18) 0%, rgba(0,21,61,0) 100%); border: 0.5px solid var(--border); border-radius: 22px; margin: 10px 16px; padding: 18px 20px; }
-.hero-amount { font-size: 42px; font-weight: 700; }
-.nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: rgba(0,15,45,0.93); backdrop-filter: blur(20px); border-top: 0.5px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0 calc(16px + var(--safe-bottom)); z-index: 200; }
-.nav-item { color: var(--text2); background: none; border: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  padding-bottom: calc(90px + var(--safe-bottom));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: calc(52px + var(--safe-top)) 20px 8px;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header-greeting { font-size: 13px; color: var(--text2); font-weight: 500; letter-spacing: .3px; }
+.app-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #fff;
+  margin-top: 2px;
+}
+.date-pill {
+  font-size: 13px;
+  color: var(--text2);
+  background: var(--card);
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 0.5px solid var(--border);
+}
+
+/* ── BOTTOM NAV ── */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: rgba(0,15,45,0.93);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0 calc(16px + var(--safe-bottom));
+  z-index: 200;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  color: var(--text2);
+  transition: color .15s;
+  min-width: 52px;
+}
 .nav-item.active { color: var(--blue); }
-.fab { width: 54px; height: 54px; border-radius: 50%; background: var(--blue); border: none; color: white; font-size: 24px; margin-top: -8px; }
-.panel { display: none; } .panel.active { display: block; }
-.card { background: var(--card); border-radius: 16px; margin: 10px 16px; border: 0.5px solid var(--border); padding: 15px; }
-.field { margin-bottom: 15px; }
-.field input, .field select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: white; font-size: 16px; }
-.save-btn { width: 100%; padding: 15px; background: var(--blue); border: none; border-radius: 12px; color: white; font-weight: bold; }
-/* Estilos de lista y cards simplificados para este bloque */
-.list-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.amount-pos { color: var(--green); } .amount-neg { color: var(--red); }
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: flex-end; }
+.nav-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; height: 24px; }
+.nav-label { font-size: 10px; font-weight: 500; }
+
+/* SVG nav icons */
+.nav-svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.fab {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(77,159,255,0.45);
+  transition: transform .12s, box-shadow .12s;
+  margin-top: -8px;
+}
+.fab:active { transform: scale(0.93); }
+.fab svg { width: 26px; height: 26px; }
+
+/* ── PANELS ── */
+.panel { display: none; padding: 0 0 16px; }
+.panel.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border-radius: var(--r);
+  margin: 10px 16px 0;
+  overflow: hidden;
+  border: 0.5px solid var(--border);
+}
+.card-pad { padding: 16px; }
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 0 16px 8px;
+  margin-top: 20px;
+}
+
+/* ── HERO BALANCE ── */
+.hero {
+  background: linear-gradient(135deg, rgba(77,159,255,0.18) 0%, rgba(0,21,61,0) 100%);
+  border: 0.5px solid var(--border);
+  border-radius: var(--rl);
+  margin: 10px 16px 0;
+  padding: 18px 20px;
+}
+.hero-label { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 3px; }
+.hero-amount {
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+.hero-amount.pos { color: var(--green); }
+.hero-amount.neg { color: var(--red); }
+.hero-row { display: flex; gap: 10px; }
+.hero-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 0.5px solid var(--border);
+}
+.hero-stat-label { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
+.hero-stat-val { font-size: 15px; font-weight: 600; }
+
+/* ── TARJETA POCHI ESPECIAL ── */
+.pochi-card {
+  background: linear-gradient(135deg, rgba(191,90,242,0.15) 0%, rgba(0,21,61,0) 100%);
+  border: 0.5px solid rgba(191,90,242,0.35);
+  border-radius: var(--r);
+  margin: 10px 16px 0;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.pochi-left { display: flex; align-items: center; gap: 10px; }
+.pochi-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: rgba(191,90,242,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.pochi-label { font-size: 13px; color: rgba(191,90,242,0.9); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.pochi-input {
+  font-size: 20px; font-weight: 700;
+  color: #CF8EF4;
+  background: transparent;
+  border: none; border-bottom: 1.5px solid rgba(191,90,242,0.35);
+  width: 140px; text-align: right;
+  font-family: inherit;
+  outline: none;
+  padding: 2px 0;
+  letter-spacing: -0.5px;
+}
+.pochi-input:focus { border-color: #BF5AF2; }
+
+/* ── ENANO CARD ── */
+.enano-card {
+  background: linear-gradient(135deg, rgba(90,200,250,0.13) 0%, rgba(0,21,61,0) 100%);
+  border: 0.5px solid rgba(90,200,250,0.32);
+  border-radius: var(--r);
+  margin: 10px 16px 0;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.enano-left { display: flex; align-items: center; gap: 10px; }
+.enano-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: rgba(90,200,250,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.enano-label { font-size: 13px; color: rgba(90,200,250,0.9); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.enano-sublabel { font-size: 11px; color: rgba(90,200,250,0.55); margin-top: 1px; }
+
+/* ── DEFICIT CHIP ── */
+.deficit-chip {
+  background: var(--card);
+  border-radius: var(--r);
+  margin: 10px 16px 0;
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 0.5px solid var(--border);
+}
+.deficit-label { font-size: 13px; color: var(--text2); font-weight: 500; }
+.deficit-val { font-size: 16px; font-weight: 700; }
+.deficit-val.neg { color: var(--red); }
+.deficit-val.pos { color: var(--green); }
+
+/* ── PENDIENTES DASH (solo total) ── */
+.pend-dash-simple {
+  background: var(--card);
+  border-radius: var(--r);
+  margin: 10px 16px 0;
+  border: 0.5px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  cursor: pointer;
+}
+.pend-dash-simple:active { opacity: .8; }
+.pend-dash-title { font-size: 15px; font-weight: 600; }
+.pend-dash-title-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.pend-dash-total { font-size: 18px; font-weight: 700; color: var(--orange); }
+
+/* ── TORTA ── */
+.chart-wrap { position: relative; width: 100%; height: 210px; }
+.pie-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 12px;
+  padding: 0 16px 16px;
+}
+.pie-leg {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--text2);
+}
+.pie-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── LIST ROWS ── */
+.list-row {
+  display: flex;
+  align-items: center;
+  padding: 11px 16px;
+  border-top: 0.5px solid var(--sep);
+  gap: 11px;
+}
+.list-row:first-child { border-top: none; }
+.row-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.row-body { flex: 1; min-width: 0; }
+.row-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.row-right { text-align: right; flex-shrink: 0; }
+.row-amount { font-size: 14px; font-weight: 600; }
+.row-date { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.amount-neg { color: var(--red); }
+.amount-pos { color: var(--green); }
+.amount-neu { color: var(--text); }
+
+.del-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,69,58,0.12);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 12px; color: var(--red);
+  transition: background .15s;
+}
+.del-btn:active { background: rgba(255,69,58,0.28); }
+
+.edit-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(77,159,255,0.12);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 12px; color: var(--blue);
+  transition: background .15s;
+}
+.edit-btn:active { background: rgba(77,159,255,0.28); }
+
+/* ── CARGAR SHEET ── */
+.cargar-panel { padding: 0 16px; }
+.cargar-hero {
+  text-align: center;
+  padding: 28px 0 18px;
+}
+.cargar-hero .big-plus {
+  width: 68px; height: 68px;
+  background: var(--blue);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px;
+  box-shadow: 0 8px 24px rgba(77,159,255,0.35);
+}
+.cargar-hero h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.cargar-hero p { font-size: 14px; color: var(--text2); margin-top: 4px; }
+
+/* SEGMENT */
+.segment {
+  display: flex;
+  background: rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 2px;
+  margin-bottom: 18px;
+}
+.seg-btn {
+  flex: 1; padding: 7px; border: none; background: none;
+  border-radius: 8px; font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit; color: var(--text2);
+  transition: all .15s;
+}
+.seg-btn.active {
+  background: rgba(77,159,255,0.22);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+/* FORM FIELDS */
+.field { margin-bottom: 11px; }
+.field-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+.field input, .field select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--blue);
+  background: rgba(77,159,255,0.08);
+}
+.field input::placeholder { color: var(--text3); }
+.field select option { background: #071e52; color: #fff; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.save-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: opacity .15s, transform .1s;
+  box-shadow: 0 4px 16px rgba(77,159,255,0.35);
+}
+.save-btn:active { opacity: .85; transform: scale(0.98); }
+.form-msg { text-align: center; font-size: 14px; min-height: 20px; margin-top: 10px; }
+
+/* ── PENDIENTES TAB ── */
+.pend-tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 0;
+}
+.pend-tab-title { font-size: 15px; font-weight: 600; }
+.pend-tab-total { font-size: 17px; font-weight: 700; color: var(--orange); }
+
+.pend-edit-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-top: 0.5px solid var(--sep);
+  gap: 10px;
+}
+.pend-edit-row:first-child { border-top: none; }
+.pend-info { flex: 1; min-width: 0; }
+.pend-inline-input {
+  width: 110px; padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  font-size: 14px; font-family: inherit;
+  text-align: right;
+  outline: none;
+  flex-shrink: 0;
+}
+.pend-inline-input:focus { border-color: var(--blue); }
+.pend-name-input {
+  width: 100%; padding: 4px 0;
+  border: none; border-bottom: 1px solid var(--border);
+  background: transparent; color: var(--text);
+  font-size: 14px; font-weight: 500; font-family: inherit; outline: none;
+}
+.pend-name-input:focus { border-color: var(--blue); }
+.pend-name-input.pagado { color: var(--text2); text-decoration: line-through; }
+.pend-paid-badge {
+  font-size: 10px; font-weight: 700; color: var(--green);
+  background: rgba(50,215,75,0.14); border-radius: 6px;
+  padding: 2px 7px; display: inline-block; margin-top: 3px;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.pay-btn {
+  padding: 5px 10px; border-radius: 8px;
+  background: rgba(50,215,75,0.12);
+  border: 1px solid rgba(50,215,75,0.25);
+  color: var(--green); font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+  transition: background .15s;
+}
+.pay-btn:active { background: rgba(50,215,75,0.25); }
+.pay-btn.pagado {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border);
+  color: var(--text2);
+}
+
+/* Section header for gastos/ingresos */
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 16px 0;
+}
+.section-header-title { font-size: 14px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; }
+.section-header-total { font-size: 16px; font-weight: 700; }
+
+/* ── HISTORIAL / RESUMEN MES ── */
+.mes-selector {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 12px 16px;
+}
+.mes-nav {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--card); border: 0.5px solid var(--border); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--blue);
+}
+.mes-current { font-size: 16px; font-weight: 600; min-width: 140px; text-align: center; }
+
+.resumen-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 12px; }
+.res-stat { background: var(--card); border-radius: 14px; padding: 13px; border: 0.5px solid var(--border); }
+.res-stat-label { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+.res-stat-val { font-size: 19px; font-weight: 700; letter-spacing: -0.5px; }
+
+.dl-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 0 16px 4px;
+  padding: 13px;
+  background: var(--card);
+  border: 0.5px solid var(--border); border-radius: 14px;
+  font-size: 14px; font-weight: 600; color: var(--blue);
+  cursor: pointer; font-family: inherit;
+  transition: opacity .15s;
+}
+.dl-btn:active { opacity: .7; }
+
+/* FILTER BAR */
+.filter-bar {
+  padding: 8px 16px 4px;
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  padding: 6px 14px; border-radius: 20px;
+  background: var(--card); border: 0.5px solid var(--border);
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  cursor: pointer; white-space: nowrap; font-family: inherit;
+  flex-shrink: 0; transition: all .15s;
+}
+.filter-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+/* RESUMEN CAT HIGHLIGHT */
+.cat-highlight-box {
+  margin: 8px 16px 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid;
+}
+.cat-highlight-box.visible { display: flex; }
+.cat-highlight-name { font-size: 15px; font-weight: 600; }
+.cat-highlight-amount { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+
+/* ── MOVIMIENTOS FILTER EXTRA (por categoría) ── */
+.mov-cat-box {
+  margin: 6px 16px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(77,159,255,0.3);
+  background: rgba(77,159,255,0.08);
+}
+.mov-cat-box.visible { display: flex; }
+
+/* Category color helpers */
+.cat-ico-alimentos { color: #32D74B; }
+.cat-ico-salud { color: #4D9FFF; }
+.cat-ico-impuestos { color: #FF9F0A; }
+.cat-ico-delfi { color: #BF5AF2; }
+.cat-ico-servicios { color: #5AC8FA; }
+.cat-ico-transporte { color: #30B0C7; }
+.cat-ico-ropa { color: #FF453A; }
+.cat-ico-ocio { color: #BF5AF2; }
+.cat-ico-ingreso { color: #32D74B; }
+.cat-ico-meli { color: #FFD60A; }
+.cat-ico-efectivo { color: #63E6A0; }
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  align-items: flex-end;
+  justify-content: center;
+}
 .modal-overlay.visible { display: flex; }
-.modal-sheet { width: 100%; background: #071e52; padding: 20px; border-radius: 20px 20px 0 0; }
+.modal-sheet {
+  width: 100%; max-width: 430px;
+  background: #071e52;
+  border-radius: 22px 22px 0 0;
+  padding: 16px 20px calc(20px + var(--safe-bottom));
+  border-top: 0.5px solid var(--border);
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 12px; }
+.modal-cancel {
+  flex: 1; padding: 13px; border-radius: 12px;
+  background: rgba(255,255,255,0.07); border: 0.5px solid var(--border);
+  color: var(--text); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.modal-save {
+  flex: 1; padding: 13px; border-radius: 12px;
+  background: var(--blue); border: none;
+  color: white; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.modal-delete {
+  width: 100%; padding: 13px; border-radius: 12px;
+  background: rgba(255,69,58,0.12); border: 1px solid rgba(255,69,58,0.3);
+  color: var(--red); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+  margin-top: 8px;
+}
+
+/* Cierre de mes banner */
+.mes-cierre-banner {
+  background: rgba(255,159,10,0.12);
+  border: 1px solid rgba(255,159,10,0.3);
+  border-radius: 14px;
+  margin: 10px 16px 0;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--orange);
+  font-weight: 500;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.cierre-btn {
+  padding: 6px 12px; border-radius: 8px;
+  background: rgba(255,159,10,0.2); border: 1px solid rgba(255,159,10,0.4);
+  color: var(--orange); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+}
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="header">
-    <div class="header-greeting">Hola Fran 👋</div>
-    <div class="app-title">Mis Finanzas</div>
-    <div id="header-date" style="font-size: 12px; color: var(--text2);"></div>
+  <div class="header-top">
+    <div>
+      <div class="header-greeting">Hola Fran 👋</div>
+      <div class="app-title">Mis Finanzas</div>
+    </div>
+    <div class="date-pill" id="header-date"></div>
+  </div>
 </div>
 
+<!-- ════════════════ PANEL: INICIO ════════════════ -->
 <div id="panel-inicio" class="panel active">
-    <div class="hero">
-        <div style="font-size: 13px; color: var(--text2);">Disponible</div>
-        <div class="hero-amount" id="hero-saldo">$0</div>
+
+  <!-- Banner cierre de mes -->
+  <div class="mes-cierre-banner" id="cierre-banner" style="display:none">
+    <span>Nuevo mes detectado. ¿Cerrar <span id="cierre-mes-nombre"></span>?</span>
+    <button class="cierre-btn" onclick="cerrarMes()">Cerrar mes</button>
+  </div>
+
+  <div class="hero">
+    <div class="hero-label">Disponible en cuenta</div>
+    <div class="hero-amount" id="hero-saldo">$0</div>
+    <div class="hero-row">
+      <div class="hero-stat">
+        <div class="hero-stat-label">Ingresos</div>
+        <div class="hero-stat-val amount-pos" id="stat-ing">$0</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-label">Gastos</div>
+        <div class="hero-stat-val amount-neg" id="stat-gas">$0</div>
+      </div>
     </div>
-    <div class="card" onclick="abrirEditPochi()">
-        <div style="color: var(--text2); font-size: 12px;">TARJETA POCHI</div>
-        <div id="pochi-display" style="font-size: 24px; font-weight: bold; color: #CF8EF4;">$0</div>
+  </div>
+
+  <!-- Tarjeta Pochi especial -->
+  <div class="pochi-card">
+    <div class="pochi-left">
+      <div class="pochi-icon">💳</div>
+      <div>
+        <div class="pochi-label">Tarjeta Pochi</div>
+      </div>
     </div>
-    <div class="card" onclick="abrirEditEnano()">
-        <div style="color: var(--text2); font-size: 12px;">DEUDA ENANO</div>
-        <div id="enano-display" style="font-size: 24px; font-weight: bold; color: #5AC8FA;">$0</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="pochi-display" style="font-size:20px;font-weight:700;color:#CF8EF4;letter-spacing:-0.5px">$0</div>
+      <button onclick="abrirEditPochi()" style="width:30px;height:30px;border-radius:50%;background:rgba(191,90,242,0.18);border:1px solid rgba(191,90,242,0.3);color:#BF5AF2;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✏️</button>
     </div>
-    <div class="card" id="recientes-list"></div>
+  </div>
+
+  <!-- Modal inline Pochi -->
+  <div class="modal-overlay" id="modal-pochi">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Tarjeta Pochi</div>
+      <div class="field">
+        <div class="field-label">Monto (ARS)</div>
+        <input type="number" id="pochi-input" placeholder="0" inputmode="decimal" style="font-size:22px;font-weight:700;">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="cerrarEditPochi()">Cancelar</button>
+        <button class="modal-save" onclick="guardarPochi()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pendientes — solo total, clickeable -->
+  <div class="pend-dash-simple" onclick="switchPanel('pendientes', document.querySelectorAll('.nav-item')[2])">
+    <div class="pend-dash-title">Pendientes de pago</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="pend-dash-total" id="pend-dash-total">$0</div>
+      <span style="color:var(--text2);font-size:18px;line-height:1">›</span>
+    </div>
+  </div>
+
+  <div class="deficit-chip">
+    <div class="deficit-label">Déficit / Superávit real</div>
+    <div class="deficit-val" id="deficit-val">$0</div>
+  </div>
+
+  <!-- Deuda Enano -->
+  <div class="enano-card">
+    <div class="enano-left">
+      <div class="enano-icon">🤝</div>
+      <div>
+        <div class="enano-label">Deuda Enano</div>
+        <div class="enano-sublabel">Solo informativo</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="enano-display" style="font-size:20px;font-weight:700;color:#5AC8FA;letter-spacing:-0.5px">$0</div>
+      <button onclick="copiarEnano()" id="enano-copy-btn" style="width:30px;height:30px;border-radius:50%;background:rgba(90,200,250,0.15);border:1px solid rgba(90,200,250,0.3);color:#5AC8FA;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Copiar mensaje">📋</button>
+      <button onclick="abrirEditEnano()" style="width:30px;height:30px;border-radius:50%;background:rgba(90,200,250,0.15);border:1px solid rgba(90,200,250,0.3);color:#5AC8FA;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✏️</button>
+    </div>
+  </div>
+
+  <!-- Modal inline Enano -->
+  <div class="modal-overlay" id="modal-enano">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Deuda Enano</div>
+      <div class="field">
+        <div class="field-label">Signo del saldo</div>
+        <select id="enano-signo" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
+          <option value="pos">Positivo — me deben a mí</option>
+          <option value="neg">Negativo — le debo yo</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">Monto (ARS)</div>
+        <input type="number" id="enano-input" placeholder="0" inputmode="decimal" style="font-size:22px;font-weight:700;">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="cerrarEditEnano()">Cancelar</button>
+        <button class="modal-save" style="background:rgba(90,200,250,0.85)" onclick="guardarEnano()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-title" id="torta-title">Gastos del mes</div>
+  <div class="card">
+    <div class="chart-wrap"><canvas id="chartPie"></canvas></div>
+    <div class="pie-legend" id="pie-legend"></div>
+  </div>
+
+  <div class="card-title">Últimos movimientos</div>
+  <div class="card" id="recientes-list"></div>
 </div>
 
+<!-- ════════════════ PANEL: MOVIMIENTOS ════════════════ -->
+<div id="panel-movimientos" class="panel">
+  <div class="filter-bar" id="filter-bar-mov">
+    <button class="filter-chip active" onclick="setFilter('todo',this)">Todo</button>
+    <button class="filter-chip" onclick="setFilter('gasto',this)">Gastos</button>
+    <button class="filter-chip" onclick="setFilter('ingreso',this)">Ingresos</button>
+  </div>
+  <!-- Cat filter chips se agregan dinámicamente abajo -->
+  <div class="filter-bar" id="filter-bar-cats" style="padding-top:0"></div>
+
+  <!-- Box resumen categoría seleccionada en movimientos -->
+  <div class="mov-cat-box" id="mov-cat-box">
+    <div>
+      <div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">Total en</div>
+      <div style="font-size:15px;font-weight:600" id="mov-cat-name">—</div>
+    </div>
+    <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px" id="mov-cat-total">$0</div>
+  </div>
+
+  <!-- Encabezado totales gastos/ingresos -->
+  <div id="mov-section-header"></div>
+
+  <div class="card" id="movimientos-list"></div>
+</div>
+
+<!-- ════════════════ PANEL: CARGAR ════════════════ -->
 <div id="panel-cargar" class="panel">
-    <div class="card">
-        <h3>Nuevo Registro</h3>
-        <div class="segment" style="display:flex; gap:5px; margin: 15px 0;">
-            <button class="save-btn" onclick="setTipo('gasto')" id="btn-gasto" style="background:var(--red)">Gasto</button>
-            <button class="save-btn" onclick="setTipo('ingreso')" id="btn-ingreso" style="background:var(--green)">Ingreso</button>
-        </div>
-        <div class="field"><input type="number" id="f-monto" placeholder="Monto" inputmode="decimal"></div>
-        <div class="field"><input type="text" id="f-concepto" placeholder="Concepto"></div>
-        <div class="field"><select id="f-cat"></select></div>
-        <button class="save-btn" onclick="guardar()">Guardar en Firebase</button>
-        <div id="form-msg" class="form-msg"></div>
+  <div class="cargar-panel">
+    <div class="cargar-hero">
+      <div class="big-plus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+          <path d="M12 4v16M4 12h16"/>
+        </svg>
+      </div>
+      <h2>Nuevo registro</h2>
+      <p id="cargar-date-label"></p>
     </div>
+
+    <div class="segment">
+      <button class="seg-btn active" id="seg-gasto" onclick="setTipo('gasto')">Gasto</button>
+      <button class="seg-btn" id="seg-ingreso" onclick="setTipo('ingreso')">Ingreso</button>
+      <button class="seg-btn" id="seg-pendiente" onclick="setTipo('pendiente')">Pendiente</button>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Monto (ARS)</div>
+      <input type="number" id="f-monto" placeholder="0" inputmode="decimal">
+    </div>
+    <div id="neg-hint" style="font-size:12px;color:var(--text2);margin:-5px 0 9px;display:none">
+      Podés ingresar negativo para descontar saldo
+    </div>
+
+    <div class="field">
+      <div class="field-label">Concepto</div>
+      <input type="text" id="f-concepto" placeholder="ej. Carnicería">
+    </div>
+
+    <div class="field" id="cat-field">
+      <div class="field-label">Categoría</div>
+      <select id="f-cat"></select>
+    </div>
+
+    <button class="save-btn" onclick="guardar()">Guardar</button>
+    <div class="form-msg" id="form-msg"></div>
+
+    <!-- ── DEUDA ENANO ── -->
+    <div style="margin-top:22px;padding-top:18px;border-top:0.5px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:rgba(90,200,250,0.9);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span>🤝</span> Deuda Enano
+      </div>
+      <div class="field">
+        <div class="field-label">Monto (ARS)</div>
+        <input type="number" id="enano-reg-monto" placeholder="0" inputmode="decimal">
+      </div>
+      <div class="field">
+        <div class="field-label">Operación</div>
+        <select id="enano-reg-op" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
+          <option value="descontar">Descontar saldo — recibí plata del Enano</option>
+          <option value="aumentar">Aumentar saldo — le mandé plata al Enano</option>
+        </select>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:10px;background:rgba(90,200,250,0.07);border:0.5px solid rgba(90,200,250,0.2);border-radius:12px;padding:13px 14px;cursor:pointer" onclick="toggleEnanoImpacto()">
+        <div id="enano-toggle-dot" style="width:36px;height:20px;border-radius:10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);position:relative;flex-shrink:0;transition:background .2s">
+          <div id="enano-toggle-knob" style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:1px;left:1px;transition:left .2s;opacity:0.5"></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Impactar en mi saldo</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:1px">Si está activo, afecta tu cuenta corriente</div>
+        </div>
+      </div>
+      <button class="save-btn" onclick="guardarEnanoReg()" style="background:rgba(90,200,250,0.75);box-shadow:0 4px 16px rgba(90,200,250,0.25);margin-top:4px">Registrar movimiento Enano</button>
+      <div class="form-msg" id="enano-reg-msg"></div>
+    </div>
+  </div>
 </div>
 
+<!-- ════════════════ PANEL: PENDIENTES ════════════════ -->
+<div id="panel-pendientes" class="panel">
+  <div class="card" id="pend-list-card">
+    <div class="pend-tab-header">
+      <div class="pend-tab-title">Falta pagar</div>
+      <div class="pend-tab-total" id="pend-tab-total">$0</div>
+    </div>
+    <div id="pend-list-edit"></div>
+  </div>
+
+  <div style="padding:0 16px;margin-top:16px">
+    <div style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Agregar pendiente</div>
+    <div class="field"><input type="text" id="pnew-nombre" placeholder="Concepto (ej. AYSA)"></div>
+    <div class="field-row" style="margin-bottom:12px">
+      <div class="field"><select id="pnew-cat"></select></div>
+      <div class="field"><input type="number" id="pnew-monto" placeholder="Monto"></div>
+    </div>
+    <button class="save-btn" onclick="agregarPend()" style="margin-top:0">Agregar pendiente</button>
+    <div class="form-msg" id="pend-msg"></div>
+  </div>
+</div>
+
+<!-- ════════════════ PANEL: RESUMEN ════════════════ -->
+<div id="panel-resumen" class="panel">
+  <div class="mes-selector">
+    <button class="mes-nav" onclick="cambiarMes(-1)">‹</button>
+    <div class="mes-current" id="mes-label"></div>
+    <button class="mes-nav" onclick="cambiarMes(1)">›</button>
+  </div>
+
+  <div class="resumen-stat-grid" id="res-stats"></div>
+
+  <div class="card" style="margin:0 16px 12px">
+    <div class="chart-wrap" style="height:220px"><canvas id="chartResumen"></canvas></div>
+    <div class="pie-legend" id="pie-legend-res"></div>
+  </div>
+
+  <div class="filter-bar" id="filter-bar-res" style="flex-wrap:wrap;height:auto;padding-bottom:0"></div>
+
+  <div class="cat-highlight-box" id="cat-highlight-box">
+    <div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Gastado en</div>
+      <div class="cat-highlight-name" id="cat-highlight-name">—</div>
+    </div>
+    <div class="cat-highlight-amount" id="cat-highlight-amount">$0</div>
+  </div>
+
+  <button class="dl-btn" onclick="descargarResumenPDF()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v13M5 16l7 7 7-7M3 20h18"/></svg>
+    Descargar resumen PDF (con gráfico)
+  </button>
+
+  <div class="card-title">Detalle de gastos</div>
+  <div class="card" id="res-detalle"></div>
+</div>
+
+<!-- ════════════════ BOTTOM NAV ════════════════ -->
 <nav class="nav">
-    <button class="nav-item active" onclick="switchPanel('inicio', this)">🏠 Inicio</button>
-    <button class="fab" onclick="switchPanel('cargar', null)">+</button>
-    <button class="nav-item" onclick="switchPanel('inicio', this)">📊 Movs</button>
+  <button class="nav-item active" onclick="switchPanel('inicio',this)">
+    <span class="nav-icon">
+      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    </span>
+    <span class="nav-label">Inicio</span>
+  </button>
+  <button class="nav-item" onclick="switchPanel('movimientos',this)">
+    <span class="nav-icon">
+      <svg class="nav-svg" viewBox="0 0 24 24"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    </span>
+    <span class="nav-label">Movimientos</span>
+  </button>
+  <button class="fab" onclick="switchPanel('cargar', null)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+      <path d="M12 4v16M4 12h16"/>
+    </svg>
+  </button>
+  <button class="nav-item" onclick="switchPanel('pendientes',this)">
+    <span class="nav-icon">
+      <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    </span>
+    <span class="nav-label">Pendientes</span>
+  </button>
+  <button class="nav-item" onclick="switchPanel('resumen',this)">
+    <span class="nav-icon">
+      <svg class="nav-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7M17.5 14v7"/></svg>
+    </span>
+    <span class="nav-label">Resumen</span>
+  </button>
 </nav>
 
-<div class="modal-overlay" id="modal-pochi">
-    <div class="modal-sheet">
-        <h3>Editar Pochi</h3>
-        <input type="number" id="pochi-input" class="field" style="width:100%; padding:10px;">
-        <button class="save-btn" onclick="guardarPochi()">Guardar</button>
-        <button onclick="cerrarEditPochi()" style="background:none; color:white; width:100%; margin-top:10px; border:none;">Cancelar</button>
+<!-- ════════════════ MODAL: NUEVA CATEGORÍA ════════════════ -->
+<div class="modal-overlay" id="modal-nueva-cat">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nueva categoría</div>
+    <div class="field">
+      <div class="field-label">Nombre</div>
+      <input type="text" id="nueva-cat-input" placeholder="ej. Mascotas">
     </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="cerrarModalCat()">Cancelar</button>
+      <button class="modal-save" onclick="guardarNuevaCat()">Agregar</button>
+    </div>
+  </div>
 </div>
 
-<div class="modal-overlay" id="modal-enano">
-    <div class="modal-sheet">
-        <h3>Editar Enano</h3>
-        <select id="enano-signo" class="field"><option value="pos">Me deben</option><option value="neg">Debo</option></select>
-        <input type="number" id="enano-input" class="field" style="width:100%; padding:10px;">
-        <button class="save-btn" onclick="guardarEnano()">Guardar</button>
-        <button onclick="cerrarEditEnano()" style="background:none; color:white; width:100%; margin-top:10px; border:none;">Cancelar</button>
+<!-- ════════════════ MODAL: EDITAR REGISTRO ════════════════ -->
+<div class="modal-overlay" id="modal-editar">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Editar registro</div>
+    <div class="field">
+      <div class="field-label">Monto (ARS)</div>
+      <input type="number" id="edit-monto" placeholder="0" inputmode="decimal">
     </div>
+    <div class="field">
+      <div class="field-label">Concepto</div>
+      <input type="text" id="edit-concepto" placeholder="ej. Carnicería">
+    </div>
+    <div class="field">
+      <div class="field-label">Fecha</div>
+      <input type="date" id="edit-fecha">
+    </div>
+    <div class="field" id="edit-cat-field">
+      <div class="field-label">Categoría</div>
+      <select id="edit-cat"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="cerrarModalEditar()">Cancelar</button>
+      <button class="modal-save" onclick="guardarEdicion()">Guardar</button>
+    </div>
+    <button class="modal-delete" onclick="eliminarDesdeEdicion()">Eliminar registro</button>
+  </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<!-- Chart.js PRIMERO para que esté disponible -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVlW4tvjTPrZ48_PM4sirT1uRTOP5THKI",
-    authDomain: "mis-finanzas-d65e0.firebaseapp.com",
-    projectId: "mis-finanzas-d65e0",
-    storageBucket: "mis-finanzas-d65e0.firebasestorage.app",
-    messagingSenderId: "249017917046",
-    appId: "1:249017917046:web:198ad17d39b88eae86c957",
-    measurementId: "G-GD4BBRKB8W"
-  };
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const CATS_DEFAULT = ['Alimentos','Delfi','Efectivo','Gastos varios FS','Impuestos','Meli','Ocio','Salud','Servicios','Suscripciones','Tarjeta Pochi','Transporte','Vivienda'];
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const docRef = doc(db, "ajustes", "globales");
-  const CLAVE_SEGURA = "fs2026"; // Mantené esta igual en las reglas de Firebase
+const CAT_EMOJIS = {
+  Alimentos:'🛒', Salud:'💊', Impuestos:'🏛️', Delfi:'👧',
+  Servicios:'⚡', Transporte:'🚗', Ropa:'👕', Ocio:'🎬',
+  Educación:'📚', Vivienda:'🏠', Ingreso:'💰', Otros:'📦',
+  Meli:'🛍️', 'Tarjeta Pochi':'💳', Efectivo:'💵',
+  'Gastos varios FS':'📋', Suscripciones:'📱'
+};
 
-  // Variables Globales
-  window.data = JSON.parse(localStorage.getItem('fs_data')) || [];
-  window.pochiMonto = parseFloat(localStorage.getItem('fs_pochi')) || 0;
-  window.enanoMonto = parseFloat(localStorage.getItem('fs_enano')) || 0;
-  window.cats = ['Alimentos','Delfi','Efectivo','Gastos FS','Impuestos','Meli','Ocio','Salud','Servicios','Suscripciones','Pochi','Transporte'];
+const CAT_HEX_MAP = {
+  Alimentos:'#32D74B', Salud:'#4D9FFF', Impuestos:'#FF9F0A',
+  Delfi:'#BF5AF2', Servicios:'#5AC8FA', Transporte:'#30B0C7',
+  Ocio:'#FF6B6B', Vivienda:'#FF9F0A', Ingreso:'#32D74B',
+  Meli:'#FFD60A', 'Tarjeta Pochi':'#CF8EF4', Efectivo:'#63E6A0',
+  'Gastos varios FS':'#74B9FF', Suscripciones:'#FF7675', Otros:'#8E8E93'
+};
 
-  // Función Guardar Sincronizada
-  window.save = async () => {
-    try {
-        await setDoc(docRef, {
-            data: window.data,
-            pochiMonto: window.pochiMonto,
-            enanoMonto: window.enanoMonto,
-            cats: window.cats,
-            clave: CLAVE_SEGURA,
-            lastUpdate: Date.now()
-        });
-        localStorage.setItem('fs_data', JSON.stringify(window.data));
-        renderInicio();
-    } catch (e) {
-        console.error("Error sincronizando:", e);
-        alert("Error de permisos en Firebase");
-    }
-  };
+const K = {
+  data: 'fs5_data',
+  pend: 'fs5_pend',
+  cats: 'fs5_cats',
+  pochi: 'fs5_pochi',
+  lastMes: 'fs5_lastMes',
+  archive: 'fs5_archive',
+  enano: 'fs5_enano',
+  enanoLog: 'fs5_enano_log'
+};
 
-  // Escuchar cambios en tiempo real
-  onSnapshot(docRef, (snap) => {
-    if (snap.exists()) {
-      const d = snap.data();
-      window.data = d.data || [];
-      window.pochiMonto = d.pochiMonto || 0;
-      window.enanoMonto = d.enanoMonto || 0;
-      renderInicio();
-    }
-  });
+const SEED_DATA = [
+  {id:1,tipo:'gasto',fecha:'2026-04-01',concepto:'Verdulería',cat:'Alimentos',monto:14200},
+  {id:2,tipo:'gasto',fecha:'2026-04-01',concepto:'Carnicería',cat:'Alimentos',monto:15300},
+  {id:3,tipo:'gasto',fecha:'2026-04-01',concepto:'Merienda Delfi',cat:'Delfi',monto:4100},
+  {id:4,tipo:'gasto',fecha:'2026-04-02',concepto:'Farmacia',cat:'Salud',monto:19568},
+  {id:5,tipo:'gasto',fecha:'2026-04-02',concepto:'Sircreb',cat:'Impuestos',monto:7280},
+  {id:6,tipo:'ingreso',fecha:'2026-04-01',concepto:'Ingreso general',cat:'Ingreso',monto:267132},
+];
+const SEED_PEND = [
+  {id:1,concepto:'Tarjeta Pochi',cat:'Tarjeta Pochi',monto:0,pagado:false},
+  {id:2,concepto:'Servicios',cat:'Servicios',monto:750000,pagado:false},
+];
 
-  // Funciones de la App asignadas a window para que funcionen desde el HTML
-  window.renderInicio = () => {
-    const saldo = data.reduce((s, d) => s + (d.tipo === 'ingreso' ? d.monto : -d.monto), 0);
-    document.getElementById('hero-saldo').textContent = fmt(saldo);
-    document.getElementById('pochi-display').textContent = fmt(pochiMonto);
-    document.getElementById('enano-display').textContent = fmt(enanoMonto);
-    
-    const list = document.getElementById('recientes-list');
-    list.innerHTML = '<h4>Recientes</h4>' + data.slice(-5).reverse().map(d => `
-        <div class="list-row">
-            <span>${d.concepto}</span>
-            <span class="${d.tipo==='ingreso'?'amount-pos':'amount-neg'}">${fmt(d.monto)}</span>
-        </div>
-    `).join('');
-  };
+function load(k, seed) {
+  try { const d = JSON.parse(localStorage.getItem(k)); return Array.isArray(d) ? d : (seed ? [...seed] : null); }
+  catch { return seed ? [...seed] : null; }
+}
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 
-  window.fmt = (n) => '$' + Math.abs(Math.round(n)).toLocaleString('es-AR');
+let data = load(K.data, SEED_DATA);
+let pend = load(K.pend, SEED_PEND);
+let cats = load(K.cats, CATS_DEFAULT);
+let pochiMonto = parseFloat(localStorage.getItem(K.pochi)) || 0;
+let enanoMonto = parseFloat(localStorage.getItem(K.enano)) || 0;
+// enanoLog: historial de movimientos del enano para reversión
+// cada entrada: { id, deltaEnano, dataId? } donde dataId es el id del registro en data si impactó
+let enanoLog = load(K.enanoLog, []) || [];
+let enanoImpactoActivo = false;
+let archive = load(K.archive, []) || [];
 
-  window.guardar = () => {
-    const m = parseFloat(document.getElementById('f-monto').value);
-    const c = document.getElementById('f-concepto').value;
-    if(!m || !c) return;
-    window.data.push({tipo: window.tipoSel, monto: m, concepto: c, cat: document.getElementById('f-cat').value, fecha: new Date().toISOString()});
-    window.save();
-    document.getElementById('f-monto').value = '';
-    document.getElementById('f-concepto').value = '';
-    switchPanel('inicio', document.querySelectorAll('.nav-item')[0]);
-  };
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  window.tipoSel = 'gasto';
-  window.setTipo = (t) => { window.tipoSel = t; };
+function fmt(n) {
+  const abs = Math.abs(Math.round(n));
+  const s = '$' + abs.toLocaleString('es-AR');
+  return n < 0 ? '−' + s : s;
+}
+function fmtDate(s) { const [y,m,d] = s.split('-'); return d + '/' + m; }
+function nowYMD() { const n = new Date(); return n.toISOString().split('T')[0]; }
+function nowYM() { return nowYMD().slice(0,7); }
+function nextId(arr) { return arr.length ? Math.max(...arr.map(x => x.id)) + 1 : 1; }
 
-  window.switchPanel = (name, btn) => {
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('panel-' + name).classList.add('active');
-    if(btn) {
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        btn.classList.add('active');
-    }
-    if(name === 'cargar') {
-        const sel = document.getElementById('f-cat');
-        sel.innerHTML = window.cats.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-  };
+function catColor(cat) { return CAT_HEX_MAP[cat] || '#8E8E93'; }
+function catEmoji(cat) { return CAT_EMOJIS[cat] || '📦'; }
+function autoColor(cat, index) {
+  if (CAT_HEX_MAP[cat]) return CAT_HEX_MAP[cat];
+  const palette = ['#FF6B6B','#FFA500','#FFE66D','#4ECDC4','#45B7D1','#96E6A1','#DDA0DD','#F08080'];
+  return palette[index % palette.length];
+}
 
-  window.abrirEditPochi = () => document.getElementById('modal-pochi').classList.add('visible');
-  window.cerrarEditPochi = () => document.getElementById('modal-pochi').classList.remove('visible');
-  window.guardarPochi = () => { window.pochiMonto = parseFloat(document.getElementById('pochi-input').value); window.save(); cerrarEditPochi(); };
+// ── CIERRE DE MES ──────────────────────────────────────────────────────────────
+function checkCierreMes() {
+  const lastMes = localStorage.getItem(K.lastMes);
+  const currMes = nowYM();
+  const banner = document.getElementById('cierre-banner');
+  if (lastMes && lastMes !== currMes) {
+    const [y, m] = lastMes.split('-');
+    document.getElementById('cierre-mes-nombre').textContent = MESES[parseInt(m)-1] + ' ' + y;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+    if (!lastMes) localStorage.setItem(K.lastMes, currMes);
+  }
+}
 
-  window.abrirEditEnano = () => document.getElementById('modal-enano').classList.add('visible');
-  window.cerrarEditEnano = () => document.getElementById('modal-enano').classList.remove('visible');
-  window.guardarEnano = () => { 
-    const v = parseFloat(document.getElementById('enano-input').value);
-    window.enanoMonto = document.getElementById('enano-signo').value === 'neg' ? -v : v;
-    window.save(); cerrarEditEnano(); 
-  };
-
-  // Inicio
+function cerrarMes() {
+  const lastMes = localStorage.getItem(K.lastMes) || nowYM();
+  const mesData = data.filter(d => d.fecha.startsWith(lastMes));
+  const [y, m] = lastMes.split('-');
+  const mesNombre = MESES[parseInt(m)-1] + ' ' + y;
+  archive.push({ mes: lastMes, nombre: mesNombre, registros: [...mesData] });
+  save(K.archive, archive);
+  data = data.filter(d => !d.fecha.startsWith(lastMes));
+  save(K.data, data);
+  localStorage.setItem(K.lastMes, nowYM());
+  document.getElementById('cierre-banner').style.display = 'none';
+  alert('✓ Mes ' + mesNombre + ' cerrado y archivado. Gastos e ingresos reiniciados. Los pendientes y el saldo de Pochi se mantienen.');
   renderInicio();
+}
+
+// ── HEADER & DATE ──────────────────────────────────────────────────────────────
+function setHeaderDate() {
+  const n = new Date();
+  document.getElementById('header-date').textContent =
+    n.getDate() + ' ' + MESES[n.getMonth()].slice(0,3);
+  document.getElementById('cargar-date-label').textContent =
+    'Hoy, ' + n.getDate() + ' de ' + MESES[n.getMonth()];
+}
+
+// ── POCHI ──────────────────────────────────────────────────────────────────────
+function abrirEditPochi() {
+  document.getElementById('pochi-input').value = pochiMonto || '';
+  document.getElementById('modal-pochi').classList.add('visible');
+  setTimeout(() => document.getElementById('pochi-input').focus(), 200);
+}
+function cerrarEditPochi() {
+  document.getElementById('modal-pochi').classList.remove('visible');
+}
+function guardarPochi() {
+  const val = parseFloat(document.getElementById('pochi-input').value) || 0;
+  pochiMonto = val;
+  localStorage.setItem(K.pochi, val);
+  cerrarEditPochi();
+  renderInicio();
+}
+
+// ── ENANO ──────────────────────────────────────────────────────────────────────
+function abrirEditEnano() {
+  // Mostrar el saldo actual (puede ser positivo o negativo)
+  document.getElementById('enano-input').value = enanoMonto !== 0 ? enanoMonto : '';
+  // Preseleccionar el signo correcto
+  document.getElementById('enano-signo').value = enanoMonto < 0 ? 'neg' : 'pos';
+  document.getElementById('modal-enano').classList.add('visible');
+  setTimeout(() => document.getElementById('enano-input').focus(), 200);
+}
+function cerrarEditEnano() {
+  document.getElementById('modal-enano').classList.remove('visible');
+}
+function guardarEnano() {
+  const raw = parseFloat(document.getElementById('enano-input').value) || 0;
+  const signo = document.getElementById('enano-signo').value;
+  const val = signo === 'neg' ? -Math.abs(raw) : Math.abs(raw);
+  enanoMonto = val;
+  localStorage.setItem(K.enano, val);
+  cerrarEditEnano();
+  renderInicio();
+}
+
+function copiarEnano() {
+  const texto = enanoMonto >= 0
+    ? `Me debes ${fmt(enanoMonto)}`
+    : `Te debo ${fmt(Math.abs(enanoMonto))}`;
+  navigator.clipboard.writeText(texto).then(() => {
+    const btn = document.getElementById('enano-copy-btn');
+    btn.textContent = '✓';
+    btn.style.background = 'rgba(50,215,75,0.2)';
+    btn.style.borderColor = 'rgba(50,215,75,0.4)';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = '📋';
+      btn.style.background = 'rgba(90,200,250,0.15)';
+      btn.style.borderColor = 'rgba(90,200,250,0.3)';
+      btn.style.color = '#5AC8FA';
+    }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('enano-copy-btn');
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = '📋'; }, 2000);
+  });
+}
+
+function toggleEnanoImpacto() {
+  enanoImpactoActivo = !enanoImpactoActivo;
+  const dot = document.getElementById('enano-toggle-dot');
+  const knob = document.getElementById('enano-toggle-knob');
+  if (enanoImpactoActivo) {
+    dot.style.background = 'rgba(90,200,250,0.6)';
+    dot.style.borderColor = 'rgba(90,200,250,0.5)';
+    knob.style.left = '17px';
+    knob.style.opacity = '1';
+  } else {
+    dot.style.background = 'rgba(255,255,255,0.12)';
+    dot.style.borderColor = 'rgba(255,255,255,0.2)';
+    knob.style.left = '1px';
+    knob.style.opacity = '0.5';
+  }
+}
+
+function guardarEnanoReg() {
+  const monto = parseFloat(document.getElementById('enano-reg-monto').value);
+  const op = document.getElementById('enano-reg-op').value;
+  const msg = document.getElementById('enano-reg-msg');
+
+  if (isNaN(monto) || monto <= 0) {
+    msg.textContent = 'Ingresá un monto válido.'; msg.style.color = 'var(--red)'; return;
+  }
+
+  // "Descontar saldo" = recibí plata (enanoMonto baja), "Aumentar saldo" = le mandé plata (enanoMonto sube)
+  const deltaEnano = op === 'descontar' ? -monto : monto;
+  enanoMonto += deltaEnano;
+  localStorage.setItem(K.enano, enanoMonto);
+
+  let dataId = null;
+  if (enanoImpactoActivo) {
+    if (op === 'descontar') {
+      // Desconté deuda → recibí plata → ingreso mío
+      const entry = { id: nextId(data), tipo: 'ingreso', fecha: nowYMD(), concepto: 'Cobro Deuda Enano', cat: 'Ingreso', monto, _enanoReg: true };
+      data.push(entry);
+      dataId = entry.id;
+    } else {
+      // Aumenté deuda → le mandé plata → gasto mío
+      const entry = { id: nextId(data), tipo: 'gasto', fecha: nowYMD(), concepto: 'Transferencia a Enano', cat: 'Efectivo', monto, _enanoReg: true };
+      data.push(entry);
+      dataId = entry.id;
+    }
+    save(K.data, data);
+  }
+
+  // Guardar en log para poder revertir
+  const logEntry = { id: nextId(enanoLog), deltaEnano, dataId };
+  enanoLog.push(logEntry);
+  save(K.enanoLog, enanoLog);
+
+  msg.style.color = 'var(--green)';
+  msg.textContent = enanoImpactoActivo ? '✓ Registrado e impactado en tu saldo' : '✓ Registrado (solo Deuda Enano)';
+  document.getElementById('enano-reg-monto').value = '';
+  setTimeout(() => { msg.textContent = ''; }, 2500);
+  renderInicio();
+}
+
+function eliminarEnanoReg(logId) {
+  if (!confirm('¿Revertir este movimiento de Deuda Enano?')) return;
+  const entry = enanoLog.find(e => e.id === logId);
+  if (!entry) return;
+  // Revertir saldo enano
+  enanoMonto -= entry.deltaEnano;
+  localStorage.setItem(K.enano, enanoMonto);
+  // Revertir en data si había impacto
+  if (entry.dataId) {
+    data = data.filter(d => d.id !== entry.dataId);
+    save(K.data, data);
+  }
+  enanoLog = enanoLog.filter(e => e.id !== logId);
+  save(K.enanoLog, enanoLog);
+  renderInicio(); renderMovimientos();
+}
+
+// ── SELECTS ────────────────────────────────────────────────────────────────────
+function fillSel(id) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const sorted = [...cats].sort((a,b) => a.localeCompare(b));
+  sel.innerHTML = sorted.map(c => `<option value="${c}">${c}</option>`).join('')
+    + `<option value="__nueva__">＋ Añadir nueva categoría</option>`;
+  sel.onchange = function() {
+    if (this.value === '__nueva__') {
+      this.value = sorted[0] || '';
+      abrirModalCat(id);
+    }
+  };
+}
+
+function fillAllSels() { fillSel('f-cat'); fillSel('pnew-cat'); fillSel('edit-cat'); }
+
+// ── MODAL NUEVA CATEGORÍA ──────────────────────────────────────────────────────
+let _modalTarget = null;
+function abrirModalCat(targetSelId) {
+  _modalTarget = targetSelId;
+  document.getElementById('nueva-cat-input').value = '';
+  document.getElementById('modal-nueva-cat').classList.add('visible');
+  setTimeout(() => document.getElementById('nueva-cat-input').focus(), 200);
+}
+function cerrarModalCat() { document.getElementById('modal-nueva-cat').classList.remove('visible'); }
+function guardarNuevaCat() {
+  const nombre = document.getElementById('nueva-cat-input').value.trim();
+  if (!nombre) return;
+  if (!cats.includes(nombre)) { cats.push(nombre); save(K.cats, cats); }
+  fillAllSels();
+  if (_modalTarget) { const sel = document.getElementById(_modalTarget); if (sel) sel.value = nombre; }
+  cerrarModalCat();
+}
+
+// ── MODAL EDITAR REGISTRO ──────────────────────────────────────────────────────
+let _editId = null;
+let _editMontoOriginal = 0;
+function abrirModalEditar(id) {
+  const entry = data.find(d => d.id === id);
+  if (!entry) return;
+  _editId = id;
+  _editMontoOriginal = entry.monto;
+  document.getElementById('edit-monto').value = entry.monto;
+  document.getElementById('edit-concepto').value = entry.concepto;
+  document.getElementById('edit-fecha').value = entry.fecha;
+  fillSel('edit-cat');
+  document.getElementById('edit-cat').value = entry.cat;
+  document.getElementById('edit-cat-field').style.display = entry.tipo === 'ingreso' ? 'none' : '';
+  document.getElementById('modal-editar').classList.add('visible');
+}
+function cerrarModalEditar() { document.getElementById('modal-editar').classList.remove('visible'); _editId = null; }
+function guardarEdicion() {
+  if (!_editId) return;
+  const entry = data.find(d => d.id === _editId);
+  if (!entry) return;
+  const nuevoMonto = parseFloat(document.getElementById('edit-monto').value) || 0;
+  // Si este registro estaba vinculado a enano, actualizar el delta del log
+  if (entry._enanoReg) {
+    const logEntry = enanoLog.find(e => e.dataId === entry.id);
+    if (logEntry) {
+      const diffMonto = nuevoMonto - entry.monto;
+      // Si era ingreso (descontar deuda), el delta enano era negativo, ajustar proporcionalmente
+      const factor = entry.tipo === 'ingreso' ? -1 : 1;
+      enanoMonto += factor * diffMonto;
+      logEntry.deltaEnano += factor * diffMonto;
+      localStorage.setItem(K.enano, enanoMonto);
+      save(K.enanoLog, enanoLog);
+    }
+  }
+  entry.monto = nuevoMonto;
+  entry.concepto = document.getElementById('edit-concepto').value.trim() || entry.concepto;
+  entry.fecha = document.getElementById('edit-fecha').value || entry.fecha;
+  if (entry.tipo !== 'ingreso') entry.cat = document.getElementById('edit-cat').value;
+  save(K.data, data);
+  cerrarModalEditar();
+  renderInicio(); renderMovimientos();
+}
+function eliminarDesdeEdicion() {
+  if (!_editId) return;
+  if (!confirm('¿Eliminar este registro?')) return;
+  const entry = data.find(d => d.id === _editId);
+  // Si era registro de enano, revertir saldo
+  if (entry && entry._enanoReg) {
+    const logEntry = enanoLog.find(e => e.dataId === entry.id);
+    if (logEntry) {
+      enanoMonto -= logEntry.deltaEnano;
+      localStorage.setItem(K.enano, enanoMonto);
+      enanoLog = enanoLog.filter(e => e.id !== logEntry.id);
+      save(K.enanoLog, enanoLog);
+    }
+  }
+  data = data.filter(d => d.id !== _editId);
+  save(K.data, data);
+  cerrarModalEditar();
+  renderInicio(); renderMovimientos();
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function switchPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (btn && btn.classList && btn.classList.contains('nav-item')) btn.classList.add('active');
+  if (name === 'inicio') renderInicio();
+  if (name === 'movimientos') renderMovimientos();
+  if (name === 'pendientes') renderPendientesTab();
+  if (name === 'resumen') renderResumen();
+}
+
+// ── TIPO ──────────────────────────────────────────────────────────────────────
+let tipo = 'gasto';
+function setTipo(t) {
+  tipo = t;
+  ['gasto','ingreso','pendiente'].forEach(x =>
+    document.getElementById('seg-' + x).classList.toggle('active', x === t));
+  document.getElementById('cat-field').style.display = t === 'ingreso' ? 'none' : '';
+  document.getElementById('neg-hint').style.display = t === 'ingreso' ? 'block' : 'none';
+}
+
+// ── GUARDAR ───────────────────────────────────────────────────────────────────
+function guardar() {
+  const monto = parseFloat(document.getElementById('f-monto').value);
+  const concepto = document.getElementById('f-concepto').value.trim();
+  const msg = document.getElementById('form-msg');
+  if (!concepto || isNaN(monto) || monto === 0) {
+    msg.textContent = 'Completá concepto y monto.'; msg.style.color = 'var(--red)'; return;
+  }
+  if (tipo === 'pendiente') {
+    const cat = document.getElementById('f-cat').value;
+    pend.push({ id: nextId(pend), concepto, cat, monto: Math.abs(monto), pagado: false });
+    save(K.pend, pend);
+  } else {
+    const cat = tipo === 'ingreso' ? 'Ingreso' : document.getElementById('f-cat').value;
+    data.push({ id: nextId(data), tipo, fecha: nowYMD(), concepto, cat, monto });
+    save(K.data, data);
+  }
+  msg.style.color = 'var(--green)'; msg.textContent = '✓ Guardado';
+  document.getElementById('f-monto').value = '';
+  document.getElementById('f-concepto').value = '';
+  setTimeout(() => { msg.textContent = ''; }, 2000);
+}
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+function deleteEntry(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  const entry = data.find(d => d.id === id);
+  // Revertir enano si aplica
+  if (entry && entry._enanoReg) {
+    const logEntry = enanoLog.find(e => e.dataId === id);
+    if (logEntry) {
+      enanoMonto -= logEntry.deltaEnano;
+      localStorage.setItem(K.enano, enanoMonto);
+      enanoLog = enanoLog.filter(e => e.id !== logEntry.id);
+      save(K.enanoLog, enanoLog);
+    }
+  }
+  data = data.filter(d => d.id !== id);
+  save(K.data, data);
+  renderInicio(); renderMovimientos();
+}
+function deletePend(id) {
+  if (!confirm('¿Eliminar este pendiente?')) return;
+  pend = pend.filter(p => p.id !== id);
+  save(K.pend, pend);
+  renderPendientesTab(); renderInicio();
+}
+
+// ── MARCAR PENDIENTE COMO PAGADO ──────────────────────────────────────────────
+function pagarPendiente(id) {
+  const p = pend.find(p => p.id === id);
+  if (!p) return;
+  if (p.pagado) {
+    p.pagado = false;
+    data = data.filter(d => !(d._pendId === id));
+    save(K.data, data);
+    save(K.pend, pend);
+    renderPendientesTab(); renderInicio();
+    return;
+  }
+  if (!confirm('¿Marcar "' + p.concepto + '" como pagado? Se registrará como gasto.')) return;
+  p.pagado = true;
+  data.push({
+    id: nextId(data), tipo: 'gasto', fecha: nowYMD(),
+    concepto: p.concepto + ' (pagado)', cat: p.cat,
+    monto: p.monto, _pendId: id
+  });
+  save(K.pend, pend);
+  save(K.data, data);
+  renderPendientesTab(); renderInicio();
+}
+
+// ── PENDIENTES ────────────────────────────────────────────────────────────────
+function agregarPend() {
+  const nombre = document.getElementById('pnew-nombre').value.trim();
+  const cat = document.getElementById('pnew-cat').value;
+  const monto = parseFloat(document.getElementById('pnew-monto').value) || 0;
+  const msg = document.getElementById('pend-msg');
+  if (!nombre) { msg.textContent = 'Ingresá un concepto.'; msg.style.color = 'var(--red)'; return; }
+  pend.push({ id: nextId(pend), concepto: nombre, cat, monto, pagado: false });
+  save(K.pend, pend);
+  document.getElementById('pnew-nombre').value = '';
+  document.getElementById('pnew-monto').value = '';
+  msg.style.color = 'var(--green)'; msg.textContent = '✓ Agregado';
+  setTimeout(() => msg.textContent = '', 2000);
+  renderPendientesTab(); renderInicio();
+}
+function updPend(id, field, val) {
+  const p = pend.find(p => p.id === id);
+  if (!p) return;
+  if (field === 'monto') p.monto = parseFloat(val) || 0;
+  if (field === 'nombre') p.concepto = val;
+  if (field === 'cat') p.cat = val;
+  save(K.pend, pend); renderInicio();
+}
+
+function renderPendientesTab() {
+  const el = document.getElementById('pend-list-edit');
+  const totalPend = pend.filter(p => !p.pagado).reduce((s, p) => s + (p.monto || 0), 0);
+  document.getElementById('pend-tab-total').textContent = fmt(totalPend);
+
+  if (!pend.length) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin pendientes</div>';
+    return;
+  }
+
+  const catsSorted = [...cats].sort((a,b) => a.localeCompare(b));
+  const catOpts = catsSorted.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  el.innerHTML = pend.map(p => `
+    <div class="pend-edit-row">
+      <div class="pend-info" style="opacity:${p.pagado ? '0.6' : '1'}">
+        <input class="pend-name-input ${p.pagado ? 'pagado' : ''}" value="${p.concepto}"
+          ${p.pagado ? 'disabled' : ''}
+          onchange="updPend(${p.id},'nombre',this.value)"
+          onblur="updPend(${p.id},'nombre',this.value)">
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${p.cat}</div>
+        ${p.pagado ? '<div class="pend-paid-badge">✓ Ya pagado</div>' : ''}
+      </div>
+      <input class="pend-inline-input" type="number" value="${p.monto||''}" placeholder="0"
+        ${p.pagado ? 'disabled style="opacity:0.5"' : ''}
+        oninput="updPend(${p.id},'monto',this.value)">
+      <button class="pay-btn ${p.pagado ? 'pagado' : ''}" onclick="pagarPendiente(${p.id})">
+        ${p.pagado ? 'Desmarcar' : 'Pagar ✓'}
+      </button>
+      <button class="del-btn" onclick="deletePend(${p.id})">✕</button>
+    </div>`).join('');
+}
+
+// ── INICIO ────────────────────────────────────────────────────────────────────
+let pieChart = null;
+function renderInicio() {
+  checkCierreMes();
+
+  document.getElementById('pochi-display').textContent = fmt(pochiMonto);
+  document.getElementById('enano-display').textContent = fmt(enanoMonto);
+
+  const ym = nowYM();
+  const gastos = data.filter(d => d.tipo === 'gasto' && d.fecha.startsWith(ym));
+  const ingresos = data.filter(d => d.tipo === 'ingreso' && d.fecha.startsWith(ym));
+  const allGastos = data.filter(d => d.tipo === 'gasto');
+  const allIngresos = data.filter(d => d.tipo === 'ingreso');
+
+  const totalI = allIngresos.reduce((s, d) => s + d.monto, 0);
+  const totalG = allGastos.reduce((s, d) => s + d.monto, 0);
+  const totalPend = pend.filter(p => !p.pagado).reduce((s, p) => s + (p.monto || 0), 0);
+
+  const saldo = totalI - totalG;
+  const deficit = saldo - totalPend - pochiMonto;
+
+  const heroEl = document.getElementById('hero-saldo');
+  heroEl.textContent = fmt(saldo);
+  heroEl.className = 'hero-amount ' + (saldo >= 0 ? 'pos' : 'neg');
+  document.getElementById('stat-ing').textContent = fmt(totalI);
+  document.getElementById('stat-gas').textContent = fmt(totalG);
+
+  const dv = document.getElementById('deficit-val');
+  dv.textContent = fmt(deficit);
+  dv.className = 'deficit-val ' + (deficit >= 0 ? 'pos' : 'neg');
+
+  document.getElementById('pend-dash-total').textContent = fmt(totalPend);
+
+  const mesG = gastos.filter(d => d.monto > 0);
+  const now = new Date();
+  document.getElementById('torta-title').textContent = 'Gastos de ' + MESES[now.getMonth()];
+  const catMap = {};
+  mesG.forEach(d => { catMap[d.cat] = (catMap[d.cat] || 0) + d.monto; });
+  const entries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+  const totalMes = entries.reduce((s, [, v]) => s + v, 0);
+
+  document.getElementById('pie-legend').innerHTML = entries.length
+    ? entries.map(([cat, val], i) => `
+        <div class="pie-leg">
+          <div class="pie-dot" style="background:${autoColor(cat, i)}"></div>
+          ${cat} · ${totalMes ? Math.round(val / totalMes * 100) : 0}%
+        </div>`).join('')
+    : '<span style="font-size:12px;color:var(--text2)">Sin gastos este mes</span>';
+
+  if (pieChart) { pieChart.destroy(); pieChart = null; }
+  if (entries.length) {
+    const ctx = document.getElementById('chartPie');
+    pieChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: entries.map(([c]) => c),
+        datasets: [{ data: entries.map(([, v]) => v),
+          backgroundColor: entries.map(([cat], i) => autoColor(cat, i)),
+          borderWidth: 2, borderColor: 'rgba(0,21,61,0.6)', hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx2 => ' ' + ctx2.label + ': ' + fmt(ctx2.raw) + ' (' + Math.round(ctx2.raw / totalMes * 100) + '%)' }}}
+      }
+    });
+  } else {
+    const ctx = document.getElementById('chartPie').getContext('2d');
+    ctx.clearRect(0, 0, 300, 210);
+  }
+
+  const recent = [...data].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.id - a.id).slice(0, 8);
+  const recEl = document.getElementById('recientes-list');
+  recEl.innerHTML = recent.length ? recent.map(d => rowHTML(d, true, true)).join('') : '<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos</div>';
+}
+
+// ── MOVIMIENTOS ───────────────────────────────────────────────────────────────
+let activeFilter = 'todo';
+let activeCatFilter = null;
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  activeCatFilter = null;
+  document.querySelectorAll('#filter-bar-mov .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#filter-bar-cats .filter-chip').forEach(b => b.classList.remove('active'));
+  renderMovimientos();
+}
+
+function setCatFilter(cat, btn) {
+  if (activeCatFilter === cat) {
+    activeCatFilter = null;
+    document.querySelectorAll('#filter-bar-cats .filter-chip').forEach(b => b.classList.remove('active'));
+  } else {
+    activeCatFilter = cat;
+    document.querySelectorAll('#filter-bar-cats .filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderMovimientos();
+}
+
+function renderMovimientos() {
+  const allCats = [...new Set(data.map(d => d.cat))].sort();
+  const fb = document.getElementById('filter-bar-cats');
+  fb.innerHTML = allCats.map(cat => {
+    const col = autoColor(cat, allCats.indexOf(cat));
+    const isActive = activeCatFilter === cat ? 'active' : '';
+    return `<button class="filter-chip ${isActive}"
+      style="${isActive ? '' : 'border-color:' + col + '33'}"
+      onclick="setCatFilter('${cat}', this)">${catEmoji(cat)} ${cat}</button>`;
+  }).join('');
+
+  let rows = [...data].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.id - a.id);
+  if (activeFilter === 'gasto') rows = rows.filter(d => d.tipo === 'gasto');
+  else if (activeFilter === 'ingreso') rows = rows.filter(d => d.tipo === 'ingreso');
+  if (activeCatFilter) rows = rows.filter(d => d.cat === activeCatFilter);
+
+  const catBox = document.getElementById('mov-cat-box');
+  if (activeCatFilter) {
+    const catTotal = rows.reduce((s, d) => s + Math.abs(d.monto), 0);
+    const col = autoColor(activeCatFilter, allCats.indexOf(activeCatFilter));
+    catBox.classList.add('visible');
+    catBox.style.borderColor = col + '44';
+    catBox.style.background = col + '0E';
+    document.getElementById('mov-cat-name').textContent = catEmoji(activeCatFilter) + ' ' + activeCatFilter;
+    document.getElementById('mov-cat-name').style.color = col;
+    document.getElementById('mov-cat-total').textContent = fmt(catTotal);
+    document.getElementById('mov-cat-total').style.color = col;
+  } else {
+    catBox.classList.remove('visible');
+  }
+
+  const shEl = document.getElementById('mov-section-header');
+  const filteredG = rows.filter(d => d.tipo === 'gasto').reduce((s,d) => s + d.monto, 0);
+  const filteredI = rows.filter(d => d.tipo === 'ingreso').reduce((s,d) => s + d.monto, 0);
+  if (activeFilter === 'gasto' || (activeCatFilter && rows.some(d => d.tipo === 'gasto'))) {
+    shEl.innerHTML = `<div class="section-header"><div class="section-header-title">Total gastos</div><div class="section-header-total amount-neg">${fmt(filteredG)}</div></div>`;
+  } else if (activeFilter === 'ingreso') {
+    shEl.innerHTML = `<div class="section-header"><div class="section-header-title">Total ingresos</div><div class="section-header-total amount-pos">${fmt(filteredI)}</div></div>`;
+  } else {
+    shEl.innerHTML = `<div class="section-header" style="flex-wrap:wrap;gap:6px">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+        <span class="section-header-title">Ingresos</span>
+        <span class="section-header-total amount-pos">${fmt(filteredI)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+        <span class="section-header-title">Gastos</span>
+        <span class="section-header-total amount-neg">${fmt(filteredG)}</span>
+      </div>
+    </div>`;
+  }
+
+  const el = document.getElementById('movimientos-list');
+  el.innerHTML = rows.length
+    ? rows.map(d => rowHTML(d, true, true)).join('')
+    : '<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos</div>';
+}
+
+function rowHTML(d, showDel, showEdit) {
+  const isIng = d.tipo === 'ingreso';
+  const neg = d.monto < 0;
+  const amtClass = isIng ? (neg ? 'amount-neg' : 'amount-pos') : (neg ? 'amount-pos' : 'amount-neg');
+  const sign = isIng ? (neg ? '−' : '+') : (neg ? '+' : '−');
+  const iconColor = autoColor(d.cat, 0);
+  return `<div class="list-row">
+    <div class="row-icon" style="background:${iconColor}22">${catEmoji(d.cat)}</div>
+    <div class="row-body">
+      <div class="row-name">${d.concepto}</div>
+      <div class="row-sub" style="color:${iconColor}99">${d.cat}</div>
+    </div>
+    <div class="row-right">
+      <div class="row-amount ${amtClass}">${sign}${fmt(Math.abs(d.monto))}</div>
+      <div class="row-date">${fmtDate(d.fecha)}</div>
+    </div>
+    ${showEdit ? `<button class="edit-btn" onclick="abrirModalEditar(${d.id})">✏️</button>` : ''}
+    ${showDel ? `<button class="del-btn" onclick="deleteEntry(${d.id})">✕</button>` : ''}
+  </div>`;
+}
+
+// ── RESUMEN ───────────────────────────────────────────────────────────────────
+let resChart = null;
+let resMesOffset = 0;
+let activeResCat = null;
+
+function getMesData(offset) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + offset);
+  return { year: d.getFullYear(), month: d.getMonth(), ym: d.toISOString().slice(0,7) };
+}
+
+function renderResumen() {
+  const { year, month, ym } = getMesData(resMesOffset);
+  document.getElementById('mes-label').textContent = MESES[month] + ' ' + year;
+
+  let mesData = data.filter(d => d.fecha.startsWith(ym));
+  const archiveMes = archive.find(a => a.mes === ym);
+  if (archiveMes) mesData = archiveMes.registros;
+
+  const gastos = mesData.filter(d => d.tipo === 'gasto');
+  const ingresos = mesData.filter(d => d.tipo === 'ingreso');
+  const totalG = gastos.reduce((s, d) => s + d.monto, 0);
+  const totalI = ingresos.reduce((s, d) => s + d.monto, 0);
+  const balance = totalI - totalG;
+
+  document.getElementById('res-stats').innerHTML = `
+    <div class="res-stat"><div class="res-stat-label">Ingresos</div><div class="res-stat-val amount-pos">${fmt(totalI)}</div></div>
+    <div class="res-stat"><div class="res-stat-label">Gastos</div><div class="res-stat-val amount-neg">${fmt(totalG)}</div></div>
+    <div class="res-stat"><div class="res-stat-label">Balance</div><div class="res-stat-val ${balance >= 0 ? 'amount-pos' : 'amount-neg'}">${fmt(balance)}</div></div>
+    <div class="res-stat"><div class="res-stat-label">Registros</div><div class="res-stat-val">${mesData.length}</div></div>`;
+
+  const catMap = {};
+  gastos.forEach(d => { if (d.monto > 0) catMap[d.cat] = (catMap[d.cat] || 0) + d.monto; });
+  const entries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+  const totalMes = entries.reduce((s, [, v]) => s + v, 0);
+
+  document.getElementById('pie-legend-res').innerHTML = entries.length
+    ? entries.map(([cat, val], i) => `
+        <div class="pie-leg">
+          <div class="pie-dot" style="background:${autoColor(cat, i)}"></div>
+          ${cat} · ${totalMes ? Math.round(val / totalMes * 100) : 0}%
+        </div>`).join('')
+    : '<span style="font-size:12px;color:var(--text2)">Sin gastos</span>';
+
+  if (resChart) { resChart.destroy(); resChart = null; }
+  if (entries.length) {
+    resChart = new Chart(document.getElementById('chartResumen'), {
+      type: 'doughnut',
+      data: {
+        labels: entries.map(([c]) => c),
+        datasets: [{ data: entries.map(([, v]) => v),
+          backgroundColor: entries.map(([cat], i) => autoColor(cat, i)),
+          borderWidth: 2, borderColor: 'rgba(0,21,61,0.6)', hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        animation: { duration: 400 },
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + fmt(c.raw) + ' (' + Math.round(c.raw / totalMes * 100) + '%)' }}}
+      }
+    });
+  }
+
+  const fb = document.getElementById('filter-bar-res');
+  fb.innerHTML = `<button class="filter-chip active" onclick="filtrarResCat(null, this)">Todo</button>`
+    + entries.map(([cat], i) => {
+        const col = autoColor(cat, i);
+        return `<button class="filter-chip" style="border-color:${col}44" onclick="filtrarResCat('${cat}', this)">${catEmoji(cat)} ${cat}</button>`;
+      }).join('');
+
+  activeResCat = null;
+  actualizarHighlight(catMap);
+
+  const det = document.getElementById('res-detalle');
+  const gastosHTML = gastos.length
+    ? gastos.sort((a, b) => b.monto - a.monto).map(d => rowHTML(d, false, false)).join('')
+    : '<div style="padding:16px;text-align:center;color:var(--text2);font-size:14px">Sin gastos este mes</div>';
+  const ingresosHTML = ingresos.length
+    ? ingresos.sort((a, b) => b.monto - a.monto).map(d => rowHTML(d, false, false)).join('')
+    : '<div style="padding:16px;text-align:center;color:var(--text2);font-size:14px">Sin ingresos este mes</div>';
+  det.innerHTML = `
+    <div style="padding:10px 16px 6px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--sep)">Gastos</div>
+    ${gastosHTML}
+    <div style="padding:10px 16px 6px;font-size:11px;font-weight:700;color:rgba(50,215,75,0.8);text-transform:uppercase;letter-spacing:.5px;border-top:0.5px solid var(--sep);border-bottom:0.5px solid var(--sep);margin-top:4px">Ingresos</div>
+    ${ingresosHTML}
+  `;
+}
+
+function filtrarResCat(cat, btn) {
+  activeResCat = cat;
+  document.querySelectorAll('#filter-bar-res .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const { ym } = getMesData(resMesOffset);
+  let gastos = data.filter(d => d.fecha.startsWith(ym) && d.tipo === 'gasto');
+  const archiveMes = archive.find(a => a.mes === ym);
+  if (archiveMes) gastos = archiveMes.registros.filter(d => d.tipo === 'gasto');
+
+  const catMap = {};
+  gastos.forEach(d => { if (d.monto > 0) catMap[d.cat] = (catMap[d.cat] || 0) + d.monto; });
+  actualizarHighlight(catMap);
+
+  const det = document.getElementById('res-detalle');
+  const filtered = cat ? gastos.filter(d => d.cat === cat) : gastos;
+  det.innerHTML = filtered.length
+    ? filtered.sort((a,b) => b.monto - a.monto).map(d => rowHTML(d, false, false)).join('')
+    : '<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin gastos en esta categoría</div>';
+}
+
+function actualizarHighlight(catMap) {
+  const box = document.getElementById('cat-highlight-box');
+  if (!activeResCat) { box.classList.remove('visible'); return; }
+  const monto = catMap[activeResCat] || 0;
+  const idx = Object.keys(catMap).indexOf(activeResCat);
+  const col = autoColor(activeResCat, idx);
+  box.classList.add('visible');
+  box.style.background = col + '16';
+  box.style.borderColor = col + '50';
+  document.getElementById('cat-highlight-name').textContent = activeResCat;
+  document.getElementById('cat-highlight-name').style.color = col;
+  document.getElementById('cat-highlight-amount').textContent = fmt(monto);
+  document.getElementById('cat-highlight-amount').style.color = col;
+}
+
+function cambiarMes(d) {
+  resMesOffset = Math.min(0, resMesOffset + d);
+  renderResumen();
+}
+
+// ── DESCARGAR PDF CON GRÁFICO ──────────────────────────────────────────────────
+function descargarResumenPDF() {
+  const { year, month, ym } = getMesData(resMesOffset);
+
+  let mesData = data.filter(d => d.fecha.startsWith(ym));
+  const archiveMes = archive.find(a => a.mes === ym);
+  if (archiveMes) mesData = archiveMes.registros;
+
+  const gastos = mesData.filter(d => d.tipo === 'gasto');
+  const ingresos = mesData.filter(d => d.tipo === 'ingreso');
+  const totalG = gastos.reduce((s, d) => s + d.monto, 0);
+  const totalI = ingresos.reduce((s, d) => s + d.monto, 0);
+  const balance = totalI - totalG;
+  const mesNombre = MESES[month] + ' ' + year;
+
+  const catMap = {};
+  gastos.forEach(d => { if (d.monto > 0) catMap[d.cat] = (catMap[d.cat] || 0) + d.monto; });
+  const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+  const totalMes = catEntries.reduce((s, [, v]) => s + v, 0);
+
+  let chartImg = '';
+  const canvas = document.getElementById('chartResumen');
+  if (canvas && resChart) {
+    try { chartImg = canvas.toDataURL('image/png'); } catch(e) {}
+  }
+
+  const detalle = gastos.sort((a,b) => b.monto - a.monto).map(d =>
+    `<tr>
+      <td>${fmtDate(d.fecha)}</td>
+      <td>${d.concepto}</td>
+      <td>${d.cat}</td>
+      <td style="text-align:right;color:#ff6b6b">${fmt(d.monto)}</td>
+    </tr>`).join('');
+
+  const catRows = catEntries.map(([cat, val], i) => {
+    const col = autoColor(cat, i);
+    const pct = totalMes ? Math.round(val / totalMes * 100) : 0;
+    return `<tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${col};margin-right:6px"></span>${catEmoji(cat)} ${cat}</td>
+      <td style="text-align:right;font-weight:600;color:${col}">${fmt(val)}</td>
+      <td style="text-align:right;color:#888">${pct}%</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8">
+<title>Mis Finanzas — ${mesNombre}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', Arial, sans-serif; background: #fff; color: #222; font-size: 13px; padding: 32px; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 800; color: #00153d; letter-spacing: -0.5px; }
+  h2 { font-size: 14px; font-weight: 700; color: #00153d; text-transform: uppercase; letter-spacing: .5px; margin: 24px 0 8px; padding-bottom: 6px; border-bottom: 2px solid #e8eaf0; }
+  .header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+  .mes-label { font-size: 14px; color: #666; font-weight: 500; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat { background: #f5f7fc; border-radius: 12px; padding: 14px; }
+  .stat-label { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .stat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .green { color: #1a9e36; } .red { color: #d93025; } .blue { color: #1565c0; }
+  .chart-section { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 8px; }
+  .chart-img { width: 220px; height: 220px; object-fit: contain; flex-shrink: 0; }
+  .chart-placeholder { width: 220px; height: 220px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 13px; flex-shrink: 0; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #f5f7fc; }
+  th { padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .4px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  .footer { margin-top: 32px; font-size: 11px; color: #aaa; text-align: center; }
+  @media print { body { padding: 20px; } .no-print { display: none; } }
+</style>
+</head><body>
+<div class="header">
+  <div>
+    <h1>Mis Finanzas</h1>
+    <div class="mes-label">${mesNombre}</div>
+  </div>
+  <div style="font-size:12px;color:#aaa">${new Date().toLocaleDateString('es-AR')}</div>
+</div>
+<div class="stats">
+  <div class="stat"><div class="stat-label">Ingresos</div><div class="stat-val green">${fmt(totalI)}</div></div>
+  <div class="stat"><div class="stat-label">Gastos</div><div class="stat-val red">${fmt(totalG)}</div></div>
+  <div class="stat"><div class="stat-label">Balance</div><div class="stat-val ${balance >= 0 ? 'green' : 'red'}">${fmt(balance)}</div></div>
+</div>
+<h2>Gastos por categoría</h2>
+<div class="chart-section">
+  ${chartImg ? `<img class="chart-img" src="${chartImg}" alt="Gráfico de torta">` : `<div class="chart-placeholder">Sin gráfico</div>`}
+  <div style="flex:1">
+    <table>
+      <thead><tr><th>Categoría</th><th style="text-align:right">Monto</th><th style="text-align:right">%</th></tr></thead>
+      <tbody>${catRows || '<tr><td colspan="3" style="color:#aaa;text-align:center;padding:16px">Sin gastos</td></tr>'}</tbody>
+    </table>
+  </div>
+</div>
+<h2>Detalle de gastos</h2>
+<table>
+  <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead>
+  <tbody>${detalle || '<tr><td colspan="4" style="color:#aaa;text-align:center;padding:16px">Sin gastos</td></tr>'}</tbody>
+</table>
+<div class="footer">Generado por Mis Finanzas · ${new Date().toLocaleString('es-AR')}</div>
+<script>window.onload = function() { window.print(); }<\/script>
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (!win) {
+    const a = document.createElement('a');
+    a.href = url; a.download = 'MisFinanzas_' + mesNombre.replace(' ','_') + '.html';
+    a.click();
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+if (!localStorage.getItem(K.lastMes)) {
+  localStorage.setItem(K.lastMes, nowYM());
+}
+setHeaderDate();
+fillAllSels();
+renderInicio();
 </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'mis-finanzas-v2';
+    const URLS = [self.location.pathname];
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(caches.keys().then(keys =>
+        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      ));
+      self.clients.claim();
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match(e.request)))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+}
+</script>
+
 </body>
 </html>
