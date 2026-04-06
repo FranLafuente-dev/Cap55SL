@@ -717,8 +717,9 @@ body {
         <div class="enano-sublabel">Solo informativo</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px">
       <div id="enano-display" style="font-size:20px;font-weight:700;color:#5AC8FA;letter-spacing:-0.5px">$0</div>
+      <button onclick="copiarEnano()" id="enano-copy-btn" style="width:30px;height:30px;border-radius:50%;background:rgba(90,200,250,0.15);border:1px solid rgba(90,200,250,0.3);color:#5AC8FA;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" title="Copiar mensaje">📋</button>
       <button onclick="abrirEditEnano()" style="width:30px;height:30px;border-radius:50%;background:rgba(90,200,250,0.15);border:1px solid rgba(90,200,250,0.3);color:#5AC8FA;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✏️</button>
     </div>
   </div>
@@ -729,7 +730,14 @@ body {
       <div class="modal-handle"></div>
       <div class="modal-title">Deuda Enano</div>
       <div class="field">
-        <div class="field-label">Saldo (ARS)</div>
+        <div class="field-label">Signo del saldo</div>
+        <select id="enano-signo" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
+          <option value="pos">Positivo — me deben a mí</option>
+          <option value="neg">Negativo — le debo yo</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">Monto (ARS)</div>
         <input type="number" id="enano-input" placeholder="0" inputmode="decimal" style="font-size:22px;font-weight:700;">
       </div>
       <div class="modal-actions">
@@ -826,8 +834,8 @@ body {
       <div class="field">
         <div class="field-label">Operación</div>
         <select id="enano-reg-op" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
-          <option value="acreditar">Acreditar — recibí plata del Enano</option>
-          <option value="debitar">Debitar — le mandé plata al Enano</option>
+          <option value="descontar">Descontar saldo — recibí plata del Enano</option>
+          <option value="aumentar">Aumentar saldo — le mandé plata al Enano</option>
         </select>
       </div>
       <div class="field" style="display:flex;align-items:center;gap:10px;background:rgba(90,200,250,0.07);border:0.5px solid rgba(90,200,250,0.2);border-radius:12px;padding:13px 14px;cursor:pointer" onclick="toggleEnanoImpacto()">
@@ -1009,7 +1017,8 @@ const K = {
   pochi: 'fs5_pochi',
   lastMes: 'fs5_lastMes',
   archive: 'fs5_archive',
-  enano: 'fs5_enano'
+  enano: 'fs5_enano',
+  enanoLog: 'fs5_enano_log'
 };
 
 const SEED_DATA = [
@@ -1036,6 +1045,9 @@ let pend = load(K.pend, SEED_PEND);
 let cats = load(K.cats, CATS_DEFAULT);
 let pochiMonto = parseFloat(localStorage.getItem(K.pochi)) || 0;
 let enanoMonto = parseFloat(localStorage.getItem(K.enano)) || 0;
+// enanoLog: historial de movimientos del enano para reversión
+// cada entrada: { id, deltaEnano, dataId? } donde dataId es el id del registro en data si impactó
+let enanoLog = load(K.enanoLog, []) || [];
 let enanoImpactoActivo = false;
 let archive = load(K.archive, []) || [];
 
@@ -1066,7 +1078,6 @@ function checkCierreMes() {
   const currMes = nowYM();
   const banner = document.getElementById('cierre-banner');
   if (lastMes && lastMes !== currMes) {
-    // Hay un mes anterior sin cerrar
     const [y, m] = lastMes.split('-');
     document.getElementById('cierre-mes-nombre').textContent = MESES[parseInt(m)-1] + ' ' + y;
     banner.style.display = 'flex';
@@ -1081,18 +1092,11 @@ function cerrarMes() {
   const mesData = data.filter(d => d.fecha.startsWith(lastMes));
   const [y, m] = lastMes.split('-');
   const mesNombre = MESES[parseInt(m)-1] + ' ' + y;
-
-  // Guardar en archivo
   archive.push({ mes: lastMes, nombre: mesNombre, registros: [...mesData] });
   save(K.archive, archive);
-
-  // Limpiar gastos e ingresos del mes cerrado (NO pendientes, NO pochi)
   data = data.filter(d => !d.fecha.startsWith(lastMes));
   save(K.data, data);
-
-  // Actualizar mes actual
   localStorage.setItem(K.lastMes, nowYM());
-
   document.getElementById('cierre-banner').style.display = 'none';
   alert('✓ Mes ' + mesNombre + ' cerrado y archivado. Gastos e ingresos reiniciados. Los pendientes y el saldo de Pochi se mantienen.');
   renderInicio();
@@ -1126,7 +1130,10 @@ function guardarPochi() {
 
 // ── ENANO ──────────────────────────────────────────────────────────────────────
 function abrirEditEnano() {
-  document.getElementById('enano-input').value = enanoMonto || '';
+  // Mostrar el saldo actual (puede ser positivo o negativo)
+  document.getElementById('enano-input').value = enanoMonto !== 0 ? enanoMonto : '';
+  // Preseleccionar el signo correcto
+  document.getElementById('enano-signo').value = enanoMonto < 0 ? 'neg' : 'pos';
   document.getElementById('modal-enano').classList.add('visible');
   setTimeout(() => document.getElementById('enano-input').focus(), 200);
 }
@@ -1134,11 +1141,42 @@ function cerrarEditEnano() {
   document.getElementById('modal-enano').classList.remove('visible');
 }
 function guardarEnano() {
-  const val = parseFloat(document.getElementById('enano-input').value) || 0;
+  const raw = parseFloat(document.getElementById('enano-input').value) || 0;
+  const signo = document.getElementById('enano-signo').value;
+  const val = signo === 'neg' ? -Math.abs(raw) : Math.abs(raw);
   enanoMonto = val;
   localStorage.setItem(K.enano, val);
   cerrarEditEnano();
   renderInicio();
+}
+
+function copiarEnano() {
+  const texto = enanoMonto >= 0
+    ? `Me debes ${fmt(enanoMonto)}`
+    : `Te debo ${fmt(Math.abs(enanoMonto))}`;
+  navigator.clipboard.writeText(texto).then(() => {
+    const btn = document.getElementById('enano-copy-btn');
+    btn.textContent = '✓';
+    btn.style.background = 'rgba(50,215,75,0.2)';
+    btn.style.borderColor = 'rgba(50,215,75,0.4)';
+    btn.style.color = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = '📋';
+      btn.style.background = 'rgba(90,200,250,0.15)';
+      btn.style.borderColor = 'rgba(90,200,250,0.3)';
+      btn.style.color = '#5AC8FA';
+    }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('enano-copy-btn');
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = '📋'; }, 2000);
+  });
 }
 
 function toggleEnanoImpacto() {
@@ -1167,25 +1205,31 @@ function guardarEnanoReg() {
     msg.textContent = 'Ingresá un monto válido.'; msg.style.color = 'var(--red)'; return;
   }
 
-  // Actualizar saldo informativo de la deuda
-  if (op === 'acreditar') {
-    enanoMonto = Math.max(0, enanoMonto - monto);
-  } else {
-    enanoMonto += monto;
-  }
+  // "Descontar saldo" = recibí plata (enanoMonto baja), "Aumentar saldo" = le mandé plata (enanoMonto sube)
+  const deltaEnano = op === 'descontar' ? -monto : monto;
+  enanoMonto += deltaEnano;
   localStorage.setItem(K.enano, enanoMonto);
 
-  // Si impacto activo, registrar movimiento en cuenta propia
+  let dataId = null;
   if (enanoImpactoActivo) {
-    if (op === 'acreditar') {
-      // Recibí plata → suma como ingreso
-      data.push({ id: nextId(data), tipo: 'ingreso', fecha: nowYMD(), concepto: 'Cobro Deuda Enano', cat: 'Ingreso', monto });
+    if (op === 'descontar') {
+      // Desconté deuda → recibí plata → ingreso mío
+      const entry = { id: nextId(data), tipo: 'ingreso', fecha: nowYMD(), concepto: 'Cobro Deuda Enano', cat: 'Ingreso', monto, _enanoReg: true };
+      data.push(entry);
+      dataId = entry.id;
     } else {
-      // Le mandé plata → resta como gasto
-      data.push({ id: nextId(data), tipo: 'gasto', fecha: nowYMD(), concepto: 'Transferencia a Enano', cat: 'Efectivo', monto });
+      // Aumenté deuda → le mandé plata → gasto mío
+      const entry = { id: nextId(data), tipo: 'gasto', fecha: nowYMD(), concepto: 'Transferencia a Enano', cat: 'Efectivo', monto, _enanoReg: true };
+      data.push(entry);
+      dataId = entry.id;
     }
     save(K.data, data);
   }
+
+  // Guardar en log para poder revertir
+  const logEntry = { id: nextId(enanoLog), deltaEnano, dataId };
+  enanoLog.push(logEntry);
+  save(K.enanoLog, enanoLog);
 
   msg.style.color = 'var(--green)';
   msg.textContent = enanoImpactoActivo ? '✓ Registrado e impactado en tu saldo' : '✓ Registrado (solo Deuda Enano)';
@@ -1193,6 +1237,25 @@ function guardarEnanoReg() {
   setTimeout(() => { msg.textContent = ''; }, 2500);
   renderInicio();
 }
+
+function eliminarEnanoReg(logId) {
+  if (!confirm('¿Revertir este movimiento de Deuda Enano?')) return;
+  const entry = enanoLog.find(e => e.id === logId);
+  if (!entry) return;
+  // Revertir saldo enano
+  enanoMonto -= entry.deltaEnano;
+  localStorage.setItem(K.enano, enanoMonto);
+  // Revertir en data si había impacto
+  if (entry.dataId) {
+    data = data.filter(d => d.id !== entry.dataId);
+    save(K.data, data);
+  }
+  enanoLog = enanoLog.filter(e => e.id !== logId);
+  save(K.enanoLog, enanoLog);
+  renderInicio(); renderMovimientos();
+}
+
+// ── SELECTS ────────────────────────────────────────────────────────────────────
 function fillSel(id) {
   const sel = document.getElementById(id);
   if (!sel) return;
@@ -1229,10 +1292,12 @@ function guardarNuevaCat() {
 
 // ── MODAL EDITAR REGISTRO ──────────────────────────────────────────────────────
 let _editId = null;
+let _editMontoOriginal = 0;
 function abrirModalEditar(id) {
   const entry = data.find(d => d.id === id);
   if (!entry) return;
   _editId = id;
+  _editMontoOriginal = entry.monto;
   document.getElementById('edit-monto').value = entry.monto;
   document.getElementById('edit-concepto').value = entry.concepto;
   document.getElementById('edit-fecha').value = entry.fecha;
@@ -1246,7 +1311,21 @@ function guardarEdicion() {
   if (!_editId) return;
   const entry = data.find(d => d.id === _editId);
   if (!entry) return;
-  entry.monto = parseFloat(document.getElementById('edit-monto').value) || 0;
+  const nuevoMonto = parseFloat(document.getElementById('edit-monto').value) || 0;
+  // Si este registro estaba vinculado a enano, actualizar el delta del log
+  if (entry._enanoReg) {
+    const logEntry = enanoLog.find(e => e.dataId === entry.id);
+    if (logEntry) {
+      const diffMonto = nuevoMonto - entry.monto;
+      // Si era ingreso (descontar deuda), el delta enano era negativo, ajustar proporcionalmente
+      const factor = entry.tipo === 'ingreso' ? -1 : 1;
+      enanoMonto += factor * diffMonto;
+      logEntry.deltaEnano += factor * diffMonto;
+      localStorage.setItem(K.enano, enanoMonto);
+      save(K.enanoLog, enanoLog);
+    }
+  }
+  entry.monto = nuevoMonto;
   entry.concepto = document.getElementById('edit-concepto').value.trim() || entry.concepto;
   entry.fecha = document.getElementById('edit-fecha').value || entry.fecha;
   if (entry.tipo !== 'ingreso') entry.cat = document.getElementById('edit-cat').value;
@@ -1257,6 +1336,17 @@ function guardarEdicion() {
 function eliminarDesdeEdicion() {
   if (!_editId) return;
   if (!confirm('¿Eliminar este registro?')) return;
+  const entry = data.find(d => d.id === _editId);
+  // Si era registro de enano, revertir saldo
+  if (entry && entry._enanoReg) {
+    const logEntry = enanoLog.find(e => e.dataId === entry.id);
+    if (logEntry) {
+      enanoMonto -= logEntry.deltaEnano;
+      localStorage.setItem(K.enano, enanoMonto);
+      enanoLog = enanoLog.filter(e => e.id !== logEntry.id);
+      save(K.enanoLog, enanoLog);
+    }
+  }
   data = data.filter(d => d.id !== _editId);
   save(K.data, data);
   cerrarModalEditar();
@@ -1311,6 +1401,17 @@ function guardar() {
 // ── DELETE ────────────────────────────────────────────────────────────────────
 function deleteEntry(id) {
   if (!confirm('¿Eliminar este registro?')) return;
+  const entry = data.find(d => d.id === id);
+  // Revertir enano si aplica
+  if (entry && entry._enanoReg) {
+    const logEntry = enanoLog.find(e => e.dataId === id);
+    if (logEntry) {
+      enanoMonto -= logEntry.deltaEnano;
+      localStorage.setItem(K.enano, enanoMonto);
+      enanoLog = enanoLog.filter(e => e.id !== logEntry.id);
+      save(K.enanoLog, enanoLog);
+    }
+  }
   data = data.filter(d => d.id !== id);
   save(K.data, data);
   renderInicio(); renderMovimientos();
@@ -1327,9 +1428,7 @@ function pagarPendiente(id) {
   const p = pend.find(p => p.id === id);
   if (!p) return;
   if (p.pagado) {
-    // Desmarcar
     p.pagado = false;
-    // Eliminar el gasto automático asociado
     data = data.filter(d => !(d._pendId === id));
     save(K.data, data);
     save(K.pend, pend);
@@ -1338,7 +1437,6 @@ function pagarPendiente(id) {
   }
   if (!confirm('¿Marcar "' + p.concepto + '" como pagado? Se registrará como gasto.')) return;
   p.pagado = true;
-  // Registrar como gasto
   data.push({
     id: nextId(data), tipo: 'gasto', fecha: nowYMD(),
     concepto: p.concepto + ' (pagado)', cat: p.cat,
@@ -1411,10 +1509,7 @@ let pieChart = null;
 function renderInicio() {
   checkCierreMes();
 
-  // Mostrar monto Pochi
   document.getElementById('pochi-display').textContent = fmt(pochiMonto);
-
-  // Mostrar monto Enano
   document.getElementById('enano-display').textContent = fmt(enanoMonto);
 
   const ym = nowYM();
@@ -1442,7 +1537,6 @@ function renderInicio() {
 
   document.getElementById('pend-dash-total').textContent = fmt(totalPend);
 
-  // Torta mes actual
   const mesG = gastos.filter(d => d.monto > 0);
   const now = new Date();
   document.getElementById('torta-title').textContent = 'Gastos de ' + MESES[now.getMonth()];
@@ -1495,14 +1589,12 @@ function setFilter(f, btn) {
   activeCatFilter = null;
   document.querySelectorAll('#filter-bar-mov .filter-chip').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Reset cat chips
   document.querySelectorAll('#filter-bar-cats .filter-chip').forEach(b => b.classList.remove('active'));
   renderMovimientos();
 }
 
 function setCatFilter(cat, btn) {
   if (activeCatFilter === cat) {
-    // Toggle off
     activeCatFilter = null;
     document.querySelectorAll('#filter-bar-cats .filter-chip').forEach(b => b.classList.remove('active'));
   } else {
@@ -1514,13 +1606,12 @@ function setCatFilter(cat, btn) {
 }
 
 function renderMovimientos() {
-  // Build cat chips from unique cats in data
   const allCats = [...new Set(data.map(d => d.cat))].sort();
   const fb = document.getElementById('filter-bar-cats');
   fb.innerHTML = allCats.map(cat => {
     const col = autoColor(cat, allCats.indexOf(cat));
     const isActive = activeCatFilter === cat ? 'active' : '';
-    return `<button class="filter-chip ${isActive}" 
+    return `<button class="filter-chip ${isActive}"
       style="${isActive ? '' : 'border-color:' + col + '33'}"
       onclick="setCatFilter('${cat}', this)">${catEmoji(cat)} ${cat}</button>`;
   }).join('');
@@ -1530,7 +1621,6 @@ function renderMovimientos() {
   else if (activeFilter === 'ingreso') rows = rows.filter(d => d.tipo === 'ingreso');
   if (activeCatFilter) rows = rows.filter(d => d.cat === activeCatFilter);
 
-  // Box resumen categoría
   const catBox = document.getElementById('mov-cat-box');
   if (activeCatFilter) {
     const catTotal = rows.reduce((s, d) => s + Math.abs(d.monto), 0);
@@ -1546,7 +1636,6 @@ function renderMovimientos() {
     catBox.classList.remove('visible');
   }
 
-  // Section header totales
   const shEl = document.getElementById('mov-section-header');
   const filteredG = rows.filter(d => d.tipo === 'gasto').reduce((s,d) => s + d.monto, 0);
   const filteredI = rows.filter(d => d.tipo === 'ingreso').reduce((s,d) => s + d.monto, 0);
@@ -1610,7 +1699,6 @@ function renderResumen() {
   document.getElementById('mes-label').textContent = MESES[month] + ' ' + year;
 
   let mesData = data.filter(d => d.fecha.startsWith(ym));
-  // También buscar en archivo
   const archiveMes = archive.find(a => a.mes === ym);
   if (archiveMes) mesData = archiveMes.registros;
 
@@ -1697,7 +1785,6 @@ function filtrarResCat(cat, btn) {
   gastos.forEach(d => { if (d.monto > 0) catMap[d.cat] = (catMap[d.cat] || 0) + d.monto; });
   actualizarHighlight(catMap);
 
-  // Filtrar detalle
   const det = document.getElementById('res-detalle');
   const filtered = cat ? gastos.filter(d => d.cat === cat) : gastos;
   det.innerHTML = filtered.length
@@ -1745,14 +1832,12 @@ function descargarResumenPDF() {
   const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
   const totalMes = catEntries.reduce((s, [, v]) => s + v, 0);
 
-  // Capturar gráfico actual como imagen
   let chartImg = '';
   const canvas = document.getElementById('chartResumen');
   if (canvas && resChart) {
     try { chartImg = canvas.toDataURL('image/png'); } catch(e) {}
   }
 
-  // Construir HTML del PDF
   const detalle = gastos.sort((a,b) => b.monto - a.monto).map(d =>
     `<tr>
       <td>${fmtDate(d.fecha)}</td>
@@ -1795,10 +1880,7 @@ function descargarResumenPDF() {
   td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
   tr:last-child td { border-bottom: none; }
   .footer { margin-top: 32px; font-size: 11px; color: #aaa; text-align: center; }
-  @media print {
-    body { padding: 20px; }
-    .no-print { display: none; }
-  }
+  @media print { body { padding: 20px; } .no-print { display: none; } }
 </style>
 </head><body>
 <div class="header">
@@ -1808,22 +1890,11 @@ function descargarResumenPDF() {
   </div>
   <div style="font-size:12px;color:#aaa">${new Date().toLocaleDateString('es-AR')}</div>
 </div>
-
 <div class="stats">
-  <div class="stat">
-    <div class="stat-label">Ingresos</div>
-    <div class="stat-val green">${fmt(totalI)}</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Gastos</div>
-    <div class="stat-val red">${fmt(totalG)}</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Balance</div>
-    <div class="stat-val ${balance >= 0 ? 'green' : 'red'}">${fmt(balance)}</div>
-  </div>
+  <div class="stat"><div class="stat-label">Ingresos</div><div class="stat-val green">${fmt(totalI)}</div></div>
+  <div class="stat"><div class="stat-label">Gastos</div><div class="stat-val red">${fmt(totalG)}</div></div>
+  <div class="stat"><div class="stat-label">Balance</div><div class="stat-val ${balance >= 0 ? 'green' : 'red'}">${fmt(balance)}</div></div>
 </div>
-
 <h2>Gastos por categoría</h2>
 <div class="chart-section">
   ${chartImg ? `<img class="chart-img" src="${chartImg}" alt="Gráfico de torta">` : `<div class="chart-placeholder">Sin gráfico</div>`}
@@ -1834,25 +1905,19 @@ function descargarResumenPDF() {
     </table>
   </div>
 </div>
-
 <h2>Detalle de gastos</h2>
 <table>
   <thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead>
   <tbody>${detalle || '<tr><td colspan="4" style="color:#aaa;text-align:center;padding:16px">Sin gastos</td></tr>'}</tbody>
 </table>
-
 <div class="footer">Generado por Mis Finanzas · ${new Date().toLocaleString('es-AR')}</div>
-
-<script>
-  window.onload = function() { window.print(); }
-<\/script>
+<script>window.onload = function() { window.print(); }<\/script>
 </body></html>`;
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const win = window.open(url, '_blank');
   if (!win) {
-    // Fallback: download como html
     const a = document.createElement('a');
     a.href = url; a.download = 'MisFinanzas_' + mesNombre.replace(' ','_') + '.html';
     a.click();
@@ -1860,11 +1925,9 @@ function descargarResumenPDF() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Inicializar lastMes si no existe
 if (!localStorage.getItem(K.lastMes)) {
   localStorage.setItem(K.lastMes, nowYM());
 }
-
 setHeaderDate();
 fillAllSels();
 renderInicio();
