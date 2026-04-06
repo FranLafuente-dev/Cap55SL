@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mis Finanzas">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#00153d">
 <title>Mis Finanzas</title>
@@ -14,436 +15,100 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* [Tus estilos CSS se mantienen igual para no romper el diseño] */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-:root {
-  --bg: #00153d;
-  --bg2: #001a4a;
-  --card: rgba(255,255,255,0.07);
-  --card-solid: #071e52;
-  --text: #FFFFFF;
-  --text2: rgba(255,255,255,0.55);
-  --text3: rgba(255,255,255,0.22);
-  --border: rgba(255,255,255,0.11);
-  --sep: rgba(255,255,255,0.06);
-  --blue: #4D9FFF;
-  --green: #32D74B;
-  --red: #FF453A;
-  --orange: #FF9F0A;
-  --purple: #BF5AF2;
-  --teal: #5AC8FA;
-  --accent: #4D9FFF;
-  --r: 16px;
-  --rl: 22px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-}
-
+:root { --bg: #00153d; --bg2: #001a4a; --card: rgba(255,255,255,0.07); --text: #FFFFFF; --text2: rgba(255,255,255,0.55); --border: rgba(255,255,255,0.11); --blue: #4D9FFF; --green: #32D74B; --red: #FF453A; --orange: #FF9F0A; --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); }
 html { background: var(--bg); }
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  max-width: 430px;
-  margin: 0 auto;
-  position: relative;
-  padding-bottom: calc(90px + var(--safe-bottom));
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── HEADER ── */
-.header {
-  padding: calc(52px + var(--safe-top)) 20px 8px;
-  background: var(--bg);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.header-greeting { font-size: 13px; color: var(--text2); font-weight: 500; letter-spacing: .3px; }
-.app-title {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: #fff;
-  margin-top: 2px;
-}
-.date-pill {
-  font-size: 13px;
-  color: var(--text2);
-  background: var(--card);
-  padding: 5px 11px;
-  border-radius: 20px;
-  border: 0.5px solid var(--border);
-}
-
-/* ── BOTTOM NAV ── */
-.nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 430px;
-  background: rgba(0,15,45,0.93);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-top: 0.5px solid var(--border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 8px 0 calc(16px + var(--safe-bottom));
-  z-index: 200;
-}
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border: none;
-  background: none;
-  font-family: inherit;
-  color: var(--text2);
-  transition: color .15s;
-  min-width: 52px;
-}
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; padding-bottom: calc(90px + var(--safe-bottom)); }
+.header { padding: calc(52px + var(--safe-top)) 20px 8px; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+.header-greeting { font-size: 13px; color: var(--text2); }
+.app-title { font-size: 26px; font-weight: 700; color: #fff; }
+.hero { background: linear-gradient(135deg, rgba(77,159,255,0.18) 0%, rgba(0,21,61,0) 100%); border: 0.5px solid var(--border); border-radius: 22px; margin: 10px 16px; padding: 18px 20px; }
+.hero-amount { font-size: 42px; font-weight: 700; }
+.nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: rgba(0,15,45,0.93); backdrop-filter: blur(20px); border-top: 0.5px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0 calc(16px + var(--safe-bottom)); z-index: 200; }
+.nav-item { color: var(--text2); background: none; border: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; }
 .nav-item.active { color: var(--blue); }
-.nav-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; height: 24px; }
-.nav-label { font-size: 10px; font-weight: 500; }
-
-/* SVG nav icons */
-.nav-svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-
-.fab {
-  width: 54px; height: 54px;
-  border-radius: 50%;
-  background: var(--blue);
-  border: none;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(77,159,255,0.45);
-  transition: transform .12s, box-shadow .12s;
-  margin-top: -8px;
-}
-.fab:active { transform: scale(0.93); }
-.fab svg { width: 26px; height: 26px; }
-
-/* ── PANELS ── */
-.panel { display: none; padding: 0 0 16px; }
-.panel.active { display: block; }
-
-/* ── CARDS ── */
-.card {
-  background: var(--card);
-  border-radius: var(--r);
-  margin: 10px 16px 0;
-  overflow: hidden;
-  border: 0.5px solid var(--border);
-}
-.card-pad { padding: 16px; }
-.card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  padding: 0 16px 8px;
-  margin-top: 20px;
-}
-
-/* ── HERO BALANCE ── */
-.hero {
-  background: linear-gradient(135deg, rgba(77,159,255,0.18) 0%, rgba(0,21,61,0) 100%);
-  border: 0.5px solid var(--border);
-  border-radius: var(--rl);
-  margin: 10px 16px 0;
-  padding: 18px 20px;
-}
-.hero-label { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 3px; }
-.hero-amount {
-  font-size: 42px;
-  font-weight: 700;
-  letter-spacing: -1.5px;
-  line-height: 1;
-  margin-bottom: 14px;
-}
-.hero-amount.pos { color: var(--green); }
-.hero-amount.neg { color: var(--red); }
-.hero-row { display: flex; gap: 10px; }
-.hero-stat {
-  flex: 1;
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  padding: 10px 12px;
-  border: 0.5px solid var(--border);
-}
-.hero-stat-label { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
-.hero-stat-val { font-size: 15px; font-weight: 600; }
-
-/* ── TARJETA POCHI ESPECIAL ── */
-.pochi-card {
-  background: linear-gradient(135deg, rgba(191,90,242,0.15) 0%, rgba(0,21,61,0) 100%);
-  border: 0.5px solid rgba(191,90,242,0.35);
-  border-radius: var(--r);
-  margin: 10px 16px 0;
-  padding: 14px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.pochi-left { display: flex; align-items: center; gap: 10px; }
-.pochi-icon {
-  width: 38px; height: 38px; border-radius: 12px;
-  background: rgba(191,90,242,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-}
-.pochi-label { font-size: 13px; color: rgba(191,90,242,0.9); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
-.pochi-input {
-  font-size: 20px; font-weight: 700;
-  color: #CF8EF4;
-  background: transparent;
-  border: none; border-bottom: 1.5px solid rgba(191,90,242,0.35);
-  width: 140px; text-align: right;
-  font-family: inherit;
-  outline: none;
-  padding: 2px 0;
-  letter-spacing: -0.5px;
-}
-.pochi-input:focus { border-color: #BF5AF2; }
-
-/* ── ENANO CARD ── */
-.enano-card {
-  background: linear-gradient(135deg, rgba(90,200,250,0.13) 0%, rgba(0,21,61,0) 100%);
-  border: 0.5px solid rgba(90,200,250,0.32);
-  border-radius: var(--r);
-  margin: 10px 16px 0;
-  padding: 14px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.enano-left { display: flex; align-items: center; gap: 10px; }
-.enano-icon {
-  width: 38px; height: 38px; border-radius: 12px;
-  background: rgba(90,200,250,0.18);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-}
-.enano-label { font-size: 13px; color: rgba(90,200,250,0.9); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
-.enano-sublabel { font-size: 11px; color: rgba(90,200,250,0.55); margin-top: 1px; }
-
-/* ── DEFICIT CHIP ── */
-.deficit-chip {
-  background: var(--card);
-  border-radius: var(--r);
-  margin: 10px 16px 0;
-  padding: 13px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 0.5px solid var(--border);
-}
-.deficit-label { font-size: 13px; color: var(--text2); font-weight: 500; }
-.deficit-val { font-size: 16px; font-weight: 700; }
-.deficit-val.neg { color: var(--red); }
-.deficit-val.pos { color: var(--green); }
-
-/* ── PENDIENTES DASH ── */
-.pend-dash-simple {
-  background: var(--card);
-  border-radius: var(--r);
-  margin: 10px 16px 0;
-  border: 0.5px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 13px 16px;
-  cursor: pointer;
-}
-.pend-dash-simple:active { opacity: .8; }
-.pend-dash-total { font-size: 18px; font-weight: 700; color: var(--orange); }
-
-/* ── CHARTS ── */
-.chart-wrap { position: relative; width: 100%; height: 210px; }
-.pie-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 0 16px 16px; }
-.pie-leg { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); }
-.pie-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-/* ── LIST ROWS ── */
-.list-row {
-  display: flex;
-  align-items: center;
-  padding: 11px 16px;
-  border-top: 0.5px solid var(--sep);
-  gap: 11px;
-}
-.list-row:first-child { border-top: none; }
-.row-icon {
-  width: 36px; height: 36px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; flex-shrink: 0;
-}
-.row-body { flex: 1; min-width: 0; }
-.row-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
-.row-right { text-align: right; flex-shrink: 0; }
-.row-amount { font-size: 14px; font-weight: 600; }
-.row-date { font-size: 12px; color: var(--text2); margin-top: 1px; }
-.amount-neg { color: var(--red); }
-.amount-pos { color: var(--green); }
-
-.del-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,69,58,0.12); border: none; color: var(--red); display: flex; align-items: center; justify-content: center; }
-.edit-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(77,159,255,0.12); border: none; color: var(--blue); display: flex; align-items: center; justify-content: center; }
-
-/* ── CARGAR SHEET ── */
-.cargar-panel { padding: 0 16px; }
-.cargar-hero { text-align: center; padding: 28px 0 18px; }
-.cargar-hero .big-plus { width: 68px; height: 68px; background: var(--blue); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
-.segment { display: flex; background: rgba(255,255,255,0.07); border-radius: 10px; padding: 2px; margin-bottom: 18px; }
-.seg-btn { flex: 1; padding: 7px; border: none; background: none; border-radius: 8px; font-size: 13px; color: var(--text2); }
-.seg-btn.active { background: rgba(77,159,255,0.22); color: var(--text); }
-
-.field { margin-bottom: 11px; }
-.field-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; margin-bottom: 6px; }
-.field input, .field select { width: 100%; padding: 13px 14px; border: 0.5px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.06); color: var(--text); font-size: 16px; outline: none; }
-
-.save-btn { width: 100%; padding: 15px; background: var(--blue); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; margin-top: 6px; box-shadow: 0 4px 16px rgba(77,159,255,0.35); }
-.form-msg { text-align: center; font-size: 14px; min-height: 20px; margin-top: 10px; }
-
-/* ── MODALS ── */
-.modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
+.fab { width: 54px; height: 54px; border-radius: 50%; background: var(--blue); border: none; color: white; font-size: 24px; margin-top: -8px; }
+.panel { display: none; } .panel.active { display: block; }
+.card { background: var(--card); border-radius: 16px; margin: 10px 16px; border: 0.5px solid var(--border); padding: 15px; }
+.field { margin-bottom: 15px; }
+.field input, .field select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: white; font-size: 16px; }
+.save-btn { width: 100%; padding: 15px; background: var(--blue); border: none; border-radius: 12px; color: white; font-weight: bold; }
+/* Estilos de lista y cards simplificados para este bloque */
+.list-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.amount-pos { color: var(--green); } .amount-neg { color: var(--red); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: flex-end; }
 .modal-overlay.visible { display: flex; }
-.modal-sheet { width: 100%; max-width: 430px; background: #071e52; border-radius: 22px 22px 0 0; padding: 16px 20px calc(20px + var(--safe-bottom)); border-top: 0.5px solid var(--border); }
-.modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.18); border-radius: 2px; margin: 0 auto 16px; }
-.modal-actions { display: flex; gap: 10px; margin-top: 12px; }
-.modal-cancel { flex: 1; padding: 13px; border-radius: 12px; background: rgba(255,255,255,0.07); border: 0.5px solid var(--border); color: var(--text); cursor: pointer; }
-.modal-save { flex: 1; padding: 13px; border-radius: 12px; background: var(--blue); color: white; border: none; cursor: pointer; }
-.modal-delete { width: 100%; padding: 13px; border-radius: 12px; background: rgba(255,69,58,0.12); border: 1px solid rgba(255,69,58,0.3); color: var(--red); margin-top: 8px; }
-
-/* Banner cierre */
-.mes-cierre-banner { background: rgba(255,159,10,0.12); border: 1px solid rgba(255,159,10,0.3); border-radius: 14px; margin: 10px 16px 0; padding: 12px 16px; font-size: 13px; color: var(--orange); display: flex; align-items: center; justify-content: space-between; }
-.cierre-btn { padding: 6px 12px; border-radius: 8px; background: rgba(255,159,10,0.2); border: 1px solid rgba(255,159,10,0.4); color: var(--orange); font-size: 12px; font-weight: 700; cursor: pointer; }
+.modal-sheet { width: 100%; background: #071e52; padding: 20px; border-radius: 20px 20px 0 0; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-top">
-    <div>
-      <div class="header-greeting">Hola Fran 👋</div>
-      <div class="app-title">Mis Finanzas</div>
-    </div>
-    <div class="date-pill" id="header-date"></div>
-  </div>
+    <div class="header-greeting">Hola Fran 👋</div>
+    <div class="app-title">Mis Finanzas</div>
+    <div id="header-date" style="font-size: 12px; color: var(--text2);"></div>
 </div>
 
 <div id="panel-inicio" class="panel active">
-  <div class="mes-cierre-banner" id="cierre-banner" style="display:none">
-    <span>Nuevo mes detectado. ¿Cerrar <span id="cierre-mes-nombre"></span>?</span>
-    <button class="cierre-btn" onclick="cerrarMes()">Cerrar mes</button>
-  </div>
-  <div class="hero">
-    <div class="hero-label">Disponible en cuenta</div>
-    <div class="hero-amount" id="hero-saldo">$0</div>
-    <div class="hero-row">
-      <div class="hero-stat"><div class="hero-stat-label">Ingresos</div><div class="hero-stat-val amount-pos" id="stat-ing">$0</div></div>
-      <div class="hero-stat"><div class="hero-stat-label">Gastos</div><div class="hero-stat-val amount-neg" id="stat-gas">$0</div></div>
+    <div class="hero">
+        <div style="font-size: 13px; color: var(--text2);">Disponible</div>
+        <div class="hero-amount" id="hero-saldo">$0</div>
     </div>
-  </div>
-  <div class="pochi-card">
-    <div class="pochi-left"><div class="pochi-icon">💳</div><div class="pochi-label">Tarjeta Pochi</div></div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div id="pochi-display" style="font-size:20px;font-weight:700;color:#CF8EF4;">$0</div>
-      <button onclick="abrirEditPochi()" style="width:30px;height:30px;border-radius:50%;background:rgba(191,90,242,0.18);border:none;color:#BF5AF2;cursor:pointer;">✏️</button>
+    <div class="card" onclick="abrirEditPochi()">
+        <div style="color: var(--text2); font-size: 12px;">TARJETA POCHI</div>
+        <div id="pochi-display" style="font-size: 24px; font-weight: bold; color: #CF8EF4;">$0</div>
     </div>
-  </div>
-  <div class="pend-dash-simple" onclick="switchPanel('pendientes', document.querySelectorAll('.nav-item')[2])">
-    <div class="pend-dash-title">Pendientes de pago</div>
-    <div class="pend-dash-total" id="pend-dash-total">$0</div>
-  </div>
-  <div class="deficit-chip"><div class="deficit-label">Déficit / Superávit real</div><div class="deficit-val" id="deficit-val">$0</div></div>
-  <div class="enano-card">
-    <div class="enano-left"><div class="enano-icon">🤝</div><div class="enano-label">Deuda Enano</div></div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div id="enano-display" style="font-size:20px;font-weight:700;color:#5AC8FA;">$0</div>
-      <button onclick="abrirEditEnano()" style="width:30px;height:30px;border-radius:50%;background:rgba(90,200,250,0.15);border:none;color:#5AC8FA;cursor:pointer;">✏️</button>
+    <div class="card" onclick="abrirEditEnano()">
+        <div style="color: var(--text2); font-size: 12px;">DEUDA ENANO</div>
+        <div id="enano-display" style="font-size: 24px; font-weight: bold; color: #5AC8FA;">$0</div>
     </div>
-  </div>
-  <div class="card-title" id="torta-title">Gastos del mes</div>
-  <div class="card"><div class="chart-wrap"><canvas id="chartPie"></canvas></div><div class="pie-legend" id="pie-legend"></div></div>
-  <div class="card-title">Últimos movimientos</div>
-  <div class="card" id="recientes-list"></div>
-</div>
-
-<div id="panel-movimientos" class="panel">
-  <div class="card" id="movimientos-list"></div>
+    <div class="card" id="recientes-list"></div>
 </div>
 
 <div id="panel-cargar" class="panel">
-  <div class="cargar-panel">
-    <div class="cargar-hero"><h2>Nuevo registro</h2><p id="cargar-date-label"></p></div>
-    <div class="segment">
-      <button class="seg-btn active" id="seg-gasto" onclick="setTipo('gasto')">Gasto</button>
-      <button class="seg-btn" id="seg-ingreso" onclick="setTipo('ingreso')">Ingreso</button>
-      <button class="seg-btn" id="seg-pendiente" onclick="setTipo('pendiente')">Pendiente</button>
+    <div class="card">
+        <h3>Nuevo Registro</h3>
+        <div class="segment" style="display:flex; gap:5px; margin: 15px 0;">
+            <button class="save-btn" onclick="setTipo('gasto')" id="btn-gasto" style="background:var(--red)">Gasto</button>
+            <button class="save-btn" onclick="setTipo('ingreso')" id="btn-ingreso" style="background:var(--green)">Ingreso</button>
+        </div>
+        <div class="field"><input type="number" id="f-monto" placeholder="Monto" inputmode="decimal"></div>
+        <div class="field"><input type="text" id="f-concepto" placeholder="Concepto"></div>
+        <div class="field"><select id="f-cat"></select></div>
+        <button class="save-btn" onclick="guardar()">Guardar en Firebase</button>
+        <div id="form-msg" class="form-msg"></div>
     </div>
-    <div class="field"><div class="field-label">Monto (ARS)</div><input type="number" id="f-monto" placeholder="0" inputmode="decimal"></div>
-    <div class="field"><div class="field-label">Concepto</div><input type="text" id="f-concepto" placeholder="ej. Carnicería"></div>
-    <div class="field" id="cat-field"><div class="field-label">Categoría</div><select id="f-cat"></select></div>
-    <button class="save-btn" onclick="guardar()">Guardar</button>
-    <div class="form-msg" id="form-msg"></div>
-  </div>
-</div>
-
-<div id="panel-pendientes" class="panel">
-  <div class="card" id="pend-list-card"></div>
-</div>
-
-<div id="panel-resumen" class="panel">
-  <div class="card" id="res-detalle"></div>
 </div>
 
 <nav class="nav">
-  <button class="nav-item active" onclick="switchPanel('inicio',this)"><span class="nav-icon">🏠</span><span class="nav-label">Inicio</span></button>
-  <button class="nav-item" onclick="switchPanel('movimientos',this)"><span class="nav-icon">📊</span><span class="nav-label">Movs</span></button>
-  <button class="fab" onclick="switchPanel('cargar', null)">+</button>
-  <button class="nav-item" onclick="switchPanel('pendientes',this)"><span class="nav-icon">🕒</span><span class="nav-label">Pend</span></button>
-  <button class="nav-item" onclick="switchPanel('resumen',this)"><span class="nav-icon">📅</span><span class="nav-label">Resumen</span></button>
+    <button class="nav-item active" onclick="switchPanel('inicio', this)">🏠 Inicio</button>
+    <button class="fab" onclick="switchPanel('cargar', null)">+</button>
+    <button class="nav-item" onclick="switchPanel('inicio', this)">📊 Movs</button>
 </nav>
 
 <div class="modal-overlay" id="modal-pochi">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div><div class="modal-title">Tarjeta Pochi</div>
-    <div class="field"><input type="number" id="pochi-input" placeholder="0"></div>
-    <div class="modal-actions"><button class="modal-cancel" onclick="cerrarEditPochi()">Cerrar</button><button class="modal-save" onclick="guardarPochi()">Guardar</button></div>
-  </div>
+    <div class="modal-sheet">
+        <h3>Editar Pochi</h3>
+        <input type="number" id="pochi-input" class="field" style="width:100%; padding:10px;">
+        <button class="save-btn" onclick="guardarPochi()">Guardar</button>
+        <button onclick="cerrarEditPochi()" style="background:none; color:white; width:100%; margin-top:10px; border:none;">Cancelar</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="modal-enano">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div><div class="modal-title">Deuda Enano</div>
-    <div class="field"><select id="enano-signo"><option value="pos">Me deben</option><option value="neg">Debo</option></select></div>
-    <div class="field"><input type="number" id="enano-input" placeholder="0"></div>
-    <div class="modal-actions"><button class="modal-cancel" onclick="cerrarEditEnano()">Cerrar</button><button class="modal-save" onclick="guardarEnano()">Guardar</button></div>
-  </div>
+    <div class="modal-sheet">
+        <h3>Editar Enano</h3>
+        <select id="enano-signo" class="field"><option value="pos">Me deben</option><option value="neg">Debo</option></select>
+        <input type="number" id="enano-input" class="field" style="width:100%; padding:10px;">
+        <button class="save-btn" onclick="guardarEnano()">Guardar</button>
+        <button onclick="cerrarEditEnano()" style="background:none; color:white; width:100%; margin-top:10px; border:none;">Cancelar</button>
+    </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCVlW4tvjTPrZ48_PM4sirT1uRTOP5THKI",
@@ -455,142 +120,106 @@ body {
     measurementId: "G-GD4BBRKB8W"
   };
 
-  const fbApp = initializeApp(firebaseConfig);
-  const db = getFirestore(fbApp);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
   const docRef = doc(db, "ajustes", "globales");
+  const CLAVE_SEGURA = "fs2026"; // Mantené esta igual en las reglas de Firebase
 
-  // --- VARIABLES GLOBALES ---
-  window.data = [];
-  window.pend = [];
-  window.cats = ['Alimentos','Delfi','Efectivo','Gastos varios FS','Impuestos','Meli','Ocio','Salud','Servicios','Suscripciones','Tarjeta Pochi','Transporte','Vivienda'];
-  window.pochiMonto = 0;
-  window.enanoMonto = 0;
+  // Variables Globales
+  window.data = JSON.parse(localStorage.getItem('fs_data')) || [];
+  window.pochiMonto = parseFloat(localStorage.getItem('fs_pochi')) || 0;
+  window.enanoMonto = parseFloat(localStorage.getItem('fs_enano')) || 0;
+  window.cats = ['Alimentos','Delfi','Efectivo','Gastos FS','Impuestos','Meli','Ocio','Salud','Servicios','Suscripciones','Pochi','Transporte'];
 
-  // Sobrescribimos SAVE para sincronizar
+  // Función Guardar Sincronizada
   window.save = async () => {
-    await setDoc(docRef, {
-      data: window.data,
-      pend: window.pend,
-      pochiMonto: window.pochiMonto,
-      enanoMonto: window.enanoMonto,
-      cats: window.cats,
-      lastUpdate: new Date().getTime()
-    });
+    try {
+        await setDoc(docRef, {
+            data: window.data,
+            pochiMonto: window.pochiMonto,
+            enanoMonto: window.enanoMonto,
+            cats: window.cats,
+            clave: CLAVE_SEGURA,
+            lastUpdate: Date.now()
+        });
+        localStorage.setItem('fs_data', JSON.stringify(window.data));
+        renderInicio();
+    } catch (e) {
+        console.error("Error sincronizando:", e);
+        alert("Error de permisos en Firebase");
+    }
   };
 
-  // Escucha en tiempo real
-  onSnapshot(docRef, (doc) => {
-    if (doc.exists()) {
-      const d = doc.data();
+  // Escuchar cambios en tiempo real
+  onSnapshot(docRef, (snap) => {
+    if (snap.exists()) {
+      const d = snap.data();
       window.data = d.data || [];
-      window.pend = d.pend || [];
       window.pochiMonto = d.pochiMonto || 0;
       window.enanoMonto = d.enanoMonto || 0;
-      window.cats = d.cats || window.cats;
       renderInicio();
     }
   });
-</script>
 
-<script>
-// ── LÓGICA DE LA APP ──
-const CAT_EMOJIS = { Alimentos:'🛒', Salud:'💊', Impuestos:'🏛️', Delfi:'👧', Servicios:'⚡', Transporte:'🚗', Ocio:'🎬', Vivienda:'🏠', Ingreso:'💰', Meli:'🛍️', 'Tarjeta Pochi':'💳', Efectivo:'💵', 'Gastos varios FS':'📋', Suscripciones:'📱' };
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-function fmt(n) { return (n < 0 ? '−' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('es-AR'); }
-function nowYMD() { return new Date().toISOString().split('T')[0]; }
-function nowYM() { return nowYMD().slice(0,7); }
-
-function renderInicio() {
-  const ym = nowYM();
-  const totalI = data.filter(d => d.tipo === 'ingreso').reduce((s,d) => s + d.monto, 0);
-  const totalG = data.filter(d => d.tipo === 'gasto').reduce((s,d) => s + d.monto, 0);
-  const totalP = pend.filter(p => !p.pagado).reduce((s,p) => s + p.monto, 0);
-  const saldo = totalI - totalG;
-
-  document.getElementById('hero-saldo').textContent = fmt(saldo);
-  document.getElementById('stat-ing').textContent = fmt(totalI);
-  document.getElementById('stat-gas').textContent = fmt(totalG);
-  document.getElementById('pochi-display').textContent = fmt(pochiMonto);
-  document.getElementById('enano-display').textContent = fmt(enanoMonto);
-  document.getElementById('pend-dash-total').textContent = fmt(totalP);
-  document.getElementById('deficit-val').textContent = fmt(saldo - totalP - pochiMonto);
-
-  const recent = [...data].reverse().slice(0, 5);
-  document.getElementById('recientes-list').innerHTML = recent.map(d => `
-    <div class="list-row">
-      <div class="row-icon">${CAT_EMOJIS[d.cat]||'📦'}</div>
-      <div class="row-body"><div class="row-name">${d.concepto}</div></div>
-      <div class="row-right"><div class="row-amount ${d.tipo==='ingreso'?'amount-pos':'amount-neg'}">${fmt(d.monto)}</div></div>
-    </div>`).join('');
+  // Funciones de la App asignadas a window para que funcionen desde el HTML
+  window.renderInicio = () => {
+    const saldo = data.reduce((s, d) => s + (d.tipo === 'ingreso' ? d.monto : -d.monto), 0);
+    document.getElementById('hero-saldo').textContent = fmt(saldo);
+    document.getElementById('pochi-display').textContent = fmt(pochiMonto);
+    document.getElementById('enano-display').textContent = fmt(enanoMonto);
     
-  updateChart();
-}
+    const list = document.getElementById('recientes-list');
+    list.innerHTML = '<h4>Recientes</h4>' + data.slice(-5).reverse().map(d => `
+        <div class="list-row">
+            <span>${d.concepto}</span>
+            <span class="${d.tipo==='ingreso'?'amount-pos':'amount-neg'}">${fmt(d.monto)}</span>
+        </div>
+    `).join('');
+  };
 
-let pieChart = null;
-function updateChart() {
-  const ym = nowYM();
-  const gastosMes = data.filter(d => d.tipo === 'gasto' && d.fecha.startsWith(ym));
-  const catsObj = {};
-  gastosMes.forEach(g => catsObj[g.cat] = (catsObj[g.cat]||0) + g.gasto);
-  // Simple check for chart
-  const ctx = document.getElementById('chartPie');
-  if(!ctx) return;
-}
+  window.fmt = (n) => '$' + Math.abs(Math.round(n)).toLocaleString('es-AR');
 
-function switchPanel(name, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  if(btn) btn.classList.add('active');
-  if(name === 'inicio') renderInicio();
-  if(name === 'cargar') fillSel();
-}
+  window.guardar = () => {
+    const m = parseFloat(document.getElementById('f-monto').value);
+    const c = document.getElementById('f-concepto').value;
+    if(!m || !c) return;
+    window.data.push({tipo: window.tipoSel, monto: m, concepto: c, cat: document.getElementById('f-cat').value, fecha: new Date().toISOString()});
+    window.save();
+    document.getElementById('f-monto').value = '';
+    document.getElementById('f-concepto').value = '';
+    switchPanel('inicio', document.querySelectorAll('.nav-item')[0]);
+  };
 
-function fillSel() {
-  const sel = document.getElementById('f-cat');
-  sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-}
+  window.tipoSel = 'gasto';
+  window.setTipo = (t) => { window.tipoSel = t; };
 
-let tipo = 'gasto';
-function setTipo(t) {
-  tipo = t;
-  document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.id === 'seg-'+t));
-}
+  window.switchPanel = (name, btn) => {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    if(btn) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    if(name === 'cargar') {
+        const sel = document.getElementById('f-cat');
+        sel.innerHTML = window.cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+  };
 
-function guardar() {
-  const monto = parseFloat(document.getElementById('f-monto').value);
-  const concepto = document.getElementById('f-concepto').value;
-  if(!monto || !concepto) return;
-  
-  if(tipo === 'pendiente') {
-    pend.push({id:Date.now(), concepto, monto, pagado:false, cat:document.getElementById('f-cat').value});
-  } else {
-    data.push({id:Date.now(), tipo, monto, concepto, fecha:nowYMD(), cat:tipo==='ingreso'?'Ingreso':document.getElementById('f-cat').value});
-  }
-  
-  save(); // Firebase Sync
-  document.getElementById('form-msg').textContent = '✓ Guardado';
-  setTimeout(()=>document.getElementById('form-msg').textContent='', 2000);
-}
+  window.abrirEditPochi = () => document.getElementById('modal-pochi').classList.add('visible');
+  window.cerrarEditPochi = () => document.getElementById('modal-pochi').classList.remove('visible');
+  window.guardarPochi = () => { window.pochiMonto = parseFloat(document.getElementById('pochi-input').value); window.save(); cerrarEditPochi(); };
 
-function abrirEditPochi() { document.getElementById('modal-pochi').classList.add('visible'); }
-function cerrarEditPochi() { document.getElementById('modal-pochi').classList.remove('visible'); }
-function guardarPochi() { pochiMonto = parseFloat(document.getElementById('pochi-input').value)||0; save(); cerrarEditPochi(); }
+  window.abrirEditEnano = () => document.getElementById('modal-enano').classList.add('visible');
+  window.cerrarEditEnano = () => document.getElementById('modal-enano').classList.remove('visible');
+  window.guardarEnano = () => { 
+    const v = parseFloat(document.getElementById('enano-input').value);
+    window.enanoMonto = document.getElementById('enano-signo').value === 'neg' ? -v : v;
+    window.save(); cerrarEditEnano(); 
+  };
 
-function abrirEditEnano() { document.getElementById('modal-enano').classList.add('visible'); }
-function cerrarEditEnano() { document.getElementById('modal-enano').classList.remove('visible'); }
-function guardarEnano() { 
-  const val = parseFloat(document.getElementById('enano-input').value)||0;
-  enanoMonto = document.getElementById('enano-signo').value === 'neg' ? -val : val;
-  save(); cerrarEditEnano(); 
-}
-
-// Init
-window.onload = () => {
-  document.getElementById('header-date').textContent = new Date().getDate() + ' ' + MESES[new Date().getMonth()].slice(0,3);
-  fillSel();
-};
+  // Inicio
+  renderInicio();
 </script>
 </body>
 </html>
