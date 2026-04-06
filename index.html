@@ -83,8 +83,8 @@ body {
 .fab:active { transform: scale(0.93); }
 
 /* ── PANELS ── */
-.panel { display: none; padding: 0 0 16px; }
-.panel.active { display: block; }
+.panel { display: none; padding: 0 0 16px; opacity:0; transition: opacity .18s ease; }
+.panel.active { display: block; opacity:1; }
 
 /* ── CARDS ── */
 .card { background: var(--card); border-radius: var(--r); margin: 10px 16px 0; overflow: hidden; border: 0.5px solid var(--border); }
@@ -237,7 +237,7 @@ body {
 /* ── MODAL ── */
 .modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
 .modal-overlay.visible { display: flex; }
-.modal-sheet { width: 100%; max-width: 430px; background: #071e52; border-radius: 22px 22px 0 0; padding: 16px 20px calc(20px + var(--safe-bottom)); border-top: 0.5px solid var(--border); max-height: 85vh; overflow-y: auto; }
+.modal-sheet { width: 100%; max-width: 430px; background: #071e52; transition: transform .2s ease; transform: translateY(0); border-radius: 22px 22px 0 0; padding: 16px 20px calc(20px + var(--safe-bottom)); border-top: 0.5px solid var(--border); max-height: 85vh; overflow-y: auto; }
 .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.18); border-radius: 2px; margin: 0 auto 16px; }
 .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 12px; }
@@ -259,7 +259,7 @@ body {
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen">
+<div id="login-screen" style="display:none">
   <div style="font-size:48px;margin-bottom:16px">💰</div>
   <h1>Mis Finanzas</h1>
   <p>Ingresá con tu cuenta para acceder</p>
@@ -348,8 +348,8 @@ body {
       </div>
       <div class="info-row-right">
         <div class="info-row-amount" id="enano-display" style="color:#5AC8FA">$0</div>
-        <button class="info-row-btn" id="enano-copy-btn" style="background:rgba(90,200,250,0.15);color:#5AC8FA" onclick="event.stopPropagation();copiarEnano()">📋</button>
         <button class="info-row-btn" style="background:rgba(90,200,250,0.15);color:#5AC8FA" onclick="event.stopPropagation();abrirEditEnano()">✏️</button>
+        <button class="info-row-btn" id="enano-copy-btn" style="background:rgba(90,200,250,0.15);color:#5AC8FA" onclick="event.stopPropagation();copiarEnano()">📋</button>
       </div>
     </div>
     <!-- Ahorros -->
@@ -715,7 +715,7 @@ body {
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -733,6 +733,7 @@ const db = getFirestore(fbApp);
 
 window._doLogin = async function(email, pass) {
   try {
+    await setPersistence(auth, browserLocalPersistence);
     await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
     document.getElementById('login-err').textContent = 'Email o contraseña incorrectos';
@@ -830,10 +831,17 @@ onAuthStateChanged(auth, async (user) => {
     window._fbReady = true;
     window._initApp();
   } else {
+    // Not logged in - show login screen
     document.getElementById('login-screen').style.display = 'flex';
     window._fbReady = false;
   }
 });
+// Show login after 3s if Firebase hasn't responded (offline/slow)
+setTimeout(function(){
+  if(!window._fbReady){
+    document.getElementById('login-screen').style.display='flex';
+  }
+}, 3000);
 </script>
 
 <script>
@@ -1667,7 +1675,7 @@ function descargarResumenPDF(){
 <h2>Detalle gastos</h2>
 <table><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead><tbody>${detalle||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:16px">Sin gastos</td></tr>'}</tbody></table>
 <h2>Pendientes — ${fmt(pendTotal)}</h2>
-<table><thead><tr><th>Concepto</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead><tbody>${window._pend.map(p=>`<tr><td>${p.concepto}</td><td>${p.cat}</td><td style="text-align:right;color:#FF9F0A">${fmt(p.monto)}</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px">Sin pendientes</td></tr>'}</tbody></table>
+<table><thead><tr><th>Concepto</th><th>Categoría</th><th style="text-align:right">Monto</th><th style="text-align:right">Estado</th></tr></thead><tbody>${window._pend.map(p=>`<tr><td>${p.concepto}</td><td>${p.cat}</td><td style="text-align:right;color:${p.pagado?'#1a9e36':'#FF9F0A'}">${fmt(p.monto)}</td><td style="text-align:right;font-weight:600;color:${p.pagado?'#1a9e36':'#d93025'}">${p.pagado?'✓ Pagado':'Pendiente'}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:16px">Sin pendientes</td></tr>'}</tbody></table>
 <h2>Cuentas</h2>
 <table><tbody><tr><td>Deuda Enano</td><td style="text-align:right;font-weight:700;color:#30B0C7">${fmt(window._enanoMonto)}</td></tr><tr><td>Ahorros (acumulado)</td><td style="text-align:right;font-weight:700;color:#b8860b">${fmtUSD(window._ahorrosUSD)}</td></tr></tbody></table>
 <div class="footer">Generado por Mis Finanzas · ${new Date().toLocaleString('es-AR')}</div>
@@ -1685,9 +1693,14 @@ function descargarResumenPDF(){
     var dy=Math.abs(e.changedTouches[0].clientY-startY);
     if(dx>80&&dy<60&&startX<40){
       var active=document.querySelector('.panel.active');
-      if(active&&active.id==='panel-detalle'){switchPanel('inicio',document.querySelector('.nav-item'));}
-      else if(active&&active.id==='panel-movimientos'){switchPanel('inicio',document.querySelectorAll('.nav-item')[0]);}
-      else if(active&&active.id==='panel-cargar'){switchPanel('inicio',document.querySelectorAll('.nav-item')[0]);}
+      var navItems=document.querySelectorAll('.nav-item');
+      if(!active) return;
+      var id=active.id;
+      if(id==='panel-detalle'){switchPanel('inicio',navItems[0]);}
+      else if(id==='panel-movimientos'){switchPanel('inicio',navItems[0]);}
+      else if(id==='panel-cargar'){switchPanel('inicio',navItems[0]);}
+      else if(id==='panel-pendientes'){switchPanel('inicio',navItems[0]);}
+      else if(id==='panel-resumen'){switchPanel('inicio',navItems[0]);}
     }
   },{passive:true});
 })();
@@ -1711,7 +1724,7 @@ window.addEventListener('beforeinstallprompt',function(e){
 });
 
 if('serviceWorker' in navigator){
-  const swCode=`const CACHE='mis-finanzas-v5';const URLS=[self.location.pathname];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
+  const swCode=`const CACHE='mis-finanzas-v6';const URLS=[self.location.pathname];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
   const blob=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
