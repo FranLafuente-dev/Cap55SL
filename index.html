@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#00153d">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icono.png">
 <title>Mis Finanzas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -885,21 +885,38 @@ function catEmoji(cat) { return CAT_EMOJIS[cat]||'📦'; }
 function autoColor(cat,idx) { if(CAT_HEX_MAP[cat]) return CAT_HEX_MAP[cat]; const p=['#FF6B6B','#FFA500','#FFE66D','#4ECDC4','#45B7D1','#96E6A1','#DDA0DD','#F08080']; return p[idx%p.length]; }
 
 // ── SAVE ──
-function saveData()      { window._fbSave('data', window._data); }
-function savePend()      { window._fbSave('pend', window._pend); }
-function saveCats()      { window._fbSave('cats', window._cats); }
-function saveScalars()   { window._fbSave('scalars',{pochiMonto:window._pochiMonto,enanoMonto:window._enanoMonto,ahorrosUSD:window._ahorrosUSD,lastMes:window._lastMes}); }
-function saveArchive()   { window._fbSave('archive', window._archive); }
-function saveEnanoLog()  { window._fbSave('enanoLog', window._enanoLog); }
-function saveAhorrosLog(){ window._fbSave('ahorrosLog', window._ahorrosLog); }
+function _safeSave(key, value) {
+  if (typeof window._fbSave === 'function') {
+    window._fbSave(key, value);
+  } else {
+    setTimeout(function() { _safeSave(key, value); }, 300);
+  }
+}
+function saveData()      { _safeSave('data', window._data); }
+function savePend()      { _safeSave('pend', window._pend); }
+function saveCats()      { _safeSave('cats', window._cats); }
+function saveScalars()   { _safeSave('scalars',{pochiMonto:window._pochiMonto,enanoMonto:window._enanoMonto,ahorrosUSD:window._ahorrosUSD,lastMes:window._lastMes}); }
+function saveArchive()   { _safeSave('archive', window._archive); }
+function saveEnanoLog()  { _safeSave('enanoLog', window._enanoLog); }
+function saveAhorrosLog(){ _safeSave('ahorrosLog', window._ahorrosLog); }
 
 // ── LOGIN ──
 function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   if (!email||!pass) { document.getElementById('login-err').textContent='Completá email y contraseña'; return; }
-  document.getElementById('login-err').textContent='';
-  window._doLogin(email, pass);
+  document.getElementById('login-err').textContent='Conectando...';
+  if (typeof window._doLogin === 'function') {
+    window._doLogin(email, pass);
+  } else {
+    setTimeout(function() {
+      if (typeof window._doLogin === 'function') {
+        window._doLogin(email, pass);
+      } else {
+        document.getElementById('login-err').textContent='Error de conexión. Recargá la página.';
+      }
+    }, 2000);
+  }
 }
 
 // ── UNDO/REDO ──
