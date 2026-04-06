@@ -221,6 +221,28 @@ body {
 }
 .pochi-input:focus { border-color: #BF5AF2; }
 
+/* ── ENANO CARD ── */
+.enano-card {
+  background: linear-gradient(135deg, rgba(90,200,250,0.13) 0%, rgba(0,21,61,0) 100%);
+  border: 0.5px solid rgba(90,200,250,0.32);
+  border-radius: var(--r);
+  margin: 10px 16px 0;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.enano-left { display: flex; align-items: center; gap: 10px; }
+.enano-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: rgba(90,200,250,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.enano-label { font-size: 13px; color: rgba(90,200,250,0.9); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+.enano-sublabel { font-size: 11px; color: rgba(90,200,250,0.55); margin-top: 1px; }
+
 /* ── DEFICIT CHIP ── */
 .deficit-chip {
   background: var(--card);
@@ -686,6 +708,37 @@ body {
     <div class="deficit-val" id="deficit-val">$0</div>
   </div>
 
+  <!-- Deuda Enano -->
+  <div class="enano-card">
+    <div class="enano-left">
+      <div class="enano-icon">🤝</div>
+      <div>
+        <div class="enano-label">Deuda Enano</div>
+        <div class="enano-sublabel">Solo informativo</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="enano-display" style="font-size:20px;font-weight:700;color:#5AC8FA;letter-spacing:-0.5px">$0</div>
+      <button onclick="abrirEditEnano()" style="width:30px;height:30px;border-radius:50%;background:rgba(90,200,250,0.15);border:1px solid rgba(90,200,250,0.3);color:#5AC8FA;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✏️</button>
+    </div>
+  </div>
+
+  <!-- Modal inline Enano -->
+  <div class="modal-overlay" id="modal-enano">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Deuda Enano</div>
+      <div class="field">
+        <div class="field-label">Saldo (ARS)</div>
+        <input type="number" id="enano-input" placeholder="0" inputmode="decimal" style="font-size:22px;font-weight:700;">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="cerrarEditEnano()">Cancelar</button>
+        <button class="modal-save" style="background:rgba(90,200,250,0.85)" onclick="guardarEnano()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="card-title" id="torta-title">Gastos del mes</div>
   <div class="card">
     <div class="chart-wrap"><canvas id="chartPie"></canvas></div>
@@ -760,6 +813,35 @@ body {
 
     <button class="save-btn" onclick="guardar()">Guardar</button>
     <div class="form-msg" id="form-msg"></div>
+
+    <!-- ── DEUDA ENANO ── -->
+    <div style="margin-top:22px;padding-top:18px;border-top:0.5px solid var(--border)">
+      <div style="font-size:13px;font-weight:700;color:rgba(90,200,250,0.9);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span>🤝</span> Deuda Enano
+      </div>
+      <div class="field">
+        <div class="field-label">Monto (ARS)</div>
+        <input type="number" id="enano-reg-monto" placeholder="0" inputmode="decimal">
+      </div>
+      <div class="field">
+        <div class="field-label">Operación</div>
+        <select id="enano-reg-op" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
+          <option value="acreditar">Acreditar — recibí plata del Enano</option>
+          <option value="debitar">Debitar — le mandé plata al Enano</option>
+        </select>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:10px;background:rgba(90,200,250,0.07);border:0.5px solid rgba(90,200,250,0.2);border-radius:12px;padding:13px 14px;cursor:pointer" onclick="toggleEnanoImpacto()">
+        <div id="enano-toggle-dot" style="width:36px;height:20px;border-radius:10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);position:relative;flex-shrink:0;transition:background .2s">
+          <div id="enano-toggle-knob" style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:1px;left:1px;transition:left .2s;opacity:0.5"></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Impactar en mi saldo</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:1px">Si está activo, afecta tu cuenta corriente</div>
+        </div>
+      </div>
+      <button class="save-btn" onclick="guardarEnanoReg()" style="background:rgba(90,200,250,0.75);box-shadow:0 4px 16px rgba(90,200,250,0.25);margin-top:4px">Registrar movimiento Enano</button>
+      <div class="form-msg" id="enano-reg-msg"></div>
+    </div>
   </div>
 </div>
 
@@ -926,7 +1008,8 @@ const K = {
   cats: 'fs5_cats',
   pochi: 'fs5_pochi',
   lastMes: 'fs5_lastMes',
-  archive: 'fs5_archive'
+  archive: 'fs5_archive',
+  enano: 'fs5_enano'
 };
 
 const SEED_DATA = [
@@ -952,6 +1035,8 @@ let data = load(K.data, SEED_DATA);
 let pend = load(K.pend, SEED_PEND);
 let cats = load(K.cats, CATS_DEFAULT);
 let pochiMonto = parseFloat(localStorage.getItem(K.pochi)) || 0;
+let enanoMonto = parseFloat(localStorage.getItem(K.enano)) || 0;
+let enanoImpactoActivo = false;
 let archive = load(K.archive, []) || [];
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -1039,7 +1124,75 @@ function guardarPochi() {
   renderInicio();
 }
 
-// ── SELECTS ────────────────────────────────────────────────────────────────────
+// ── ENANO ──────────────────────────────────────────────────────────────────────
+function abrirEditEnano() {
+  document.getElementById('enano-input').value = enanoMonto || '';
+  document.getElementById('modal-enano').classList.add('visible');
+  setTimeout(() => document.getElementById('enano-input').focus(), 200);
+}
+function cerrarEditEnano() {
+  document.getElementById('modal-enano').classList.remove('visible');
+}
+function guardarEnano() {
+  const val = parseFloat(document.getElementById('enano-input').value) || 0;
+  enanoMonto = val;
+  localStorage.setItem(K.enano, val);
+  cerrarEditEnano();
+  renderInicio();
+}
+
+function toggleEnanoImpacto() {
+  enanoImpactoActivo = !enanoImpactoActivo;
+  const dot = document.getElementById('enano-toggle-dot');
+  const knob = document.getElementById('enano-toggle-knob');
+  if (enanoImpactoActivo) {
+    dot.style.background = 'rgba(90,200,250,0.6)';
+    dot.style.borderColor = 'rgba(90,200,250,0.5)';
+    knob.style.left = '17px';
+    knob.style.opacity = '1';
+  } else {
+    dot.style.background = 'rgba(255,255,255,0.12)';
+    dot.style.borderColor = 'rgba(255,255,255,0.2)';
+    knob.style.left = '1px';
+    knob.style.opacity = '0.5';
+  }
+}
+
+function guardarEnanoReg() {
+  const monto = parseFloat(document.getElementById('enano-reg-monto').value);
+  const op = document.getElementById('enano-reg-op').value;
+  const msg = document.getElementById('enano-reg-msg');
+
+  if (isNaN(monto) || monto <= 0) {
+    msg.textContent = 'Ingresá un monto válido.'; msg.style.color = 'var(--red)'; return;
+  }
+
+  // Actualizar saldo informativo de la deuda
+  if (op === 'acreditar') {
+    enanoMonto = Math.max(0, enanoMonto - monto);
+  } else {
+    enanoMonto += monto;
+  }
+  localStorage.setItem(K.enano, enanoMonto);
+
+  // Si impacto activo, registrar movimiento en cuenta propia
+  if (enanoImpactoActivo) {
+    if (op === 'acreditar') {
+      // Recibí plata → suma como ingreso
+      data.push({ id: nextId(data), tipo: 'ingreso', fecha: nowYMD(), concepto: 'Cobro Deuda Enano', cat: 'Ingreso', monto });
+    } else {
+      // Le mandé plata → resta como gasto
+      data.push({ id: nextId(data), tipo: 'gasto', fecha: nowYMD(), concepto: 'Transferencia a Enano', cat: 'Efectivo', monto });
+    }
+    save(K.data, data);
+  }
+
+  msg.style.color = 'var(--green)';
+  msg.textContent = enanoImpactoActivo ? '✓ Registrado e impactado en tu saldo' : '✓ Registrado (solo Deuda Enano)';
+  document.getElementById('enano-reg-monto').value = '';
+  setTimeout(() => { msg.textContent = ''; }, 2500);
+  renderInicio();
+}
 function fillSel(id) {
   const sel = document.getElementById(id);
   if (!sel) return;
@@ -1260,6 +1413,9 @@ function renderInicio() {
 
   // Mostrar monto Pochi
   document.getElementById('pochi-display').textContent = fmt(pochiMonto);
+
+  // Mostrar monto Enano
+  document.getElementById('enano-display').textContent = fmt(enanoMonto);
 
   const ym = nowYM();
   const gastos = data.filter(d => d.tipo === 'gasto' && d.fecha.startsWith(ym));
