@@ -85,9 +85,9 @@ body {
 
 /* ── PANELS ── */
 .panel { display: none; padding: 0 0 16px; }
-.panel.active { display: block; animation: fadeSlideIn .2s ease; }
-@keyframes fadeSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-@keyframes sheetUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+.panel.active { display: block; animation: fadeSlideIn .15s ease; }
+@keyframes fadeSlideIn { from { opacity:0; } to { opacity:1; } }
+@keyframes sheetUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
 /* ── CARDS ── */
 .card { background: var(--card); border-radius: var(--r); margin: 10px 16px 0; overflow: hidden; border: 0.5px solid var(--border); }
@@ -737,9 +737,11 @@ const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 
+// Set persistence FIRST before any auth operations
+setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
+
 window._doLogin = async function(email, pass) {
   try {
-    await setPersistence(auth, browserLocalPersistence);
     await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
     document.getElementById('login-err').textContent = 'Email o contraseña incorrectos';
@@ -1132,6 +1134,13 @@ function guardarAhorro() {
   window._ahorrosUSD+=delta; saveScalars();
   window._ahorrosLog.push({id:nextId(window._ahorrosLog),usd,tc,ars,op,delta,fecha:nowYMD()});
   saveAhorrosLog();
+  // Contrapartida en pesos si hay TC y ARS
+  if(ars>0){
+    var tipoMovimiento=op==='sumar'?'gasto':'ingreso';
+    var conceptoMovimiento=op==='sumar'?'Compra USD (ahorro)':'Venta USD (ahorro)';
+    window._data.push({id:nextId(window._data),tipo:tipoMovimiento,fecha:nowYMD(),concepto:conceptoMovimiento,cat:op==='sumar'?'Efectivo':'Ingreso',monto:ars});
+    saveData();
+  }
   msg.style.color='var(--green)'; msg.textContent='✓ Ahorro registrado';
   document.getElementById('ahorro-usd').value='';
   document.getElementById('ahorro-tc').value='';
@@ -1488,7 +1497,12 @@ function renderPendientesTab() {
   document.getElementById('pend-tab-total').textContent=fmt(totalConPochi);
   const el=document.getElementById('pend-list-edit');
   if(!window._pend.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin pendientes</div>';return;}
-  el.innerHTML=window._pend.map(p=>`
+  // Sort: unpaid first, paid last
+  var pendSorted=[...window._pend].sort((a,b)=>{
+    if(a.pagado===b.pagado) return 0;
+    return a.pagado?1:-1;
+  });
+  el.innerHTML=pendSorted.map(p=>`
     <div class="pend-edit-row">
       <div class="pend-info" style="opacity:${p.pagado?'0.6':'1'}">
         <input class="pend-name-input${p.pagado?' pagado':''}" value="${p.concepto}" ${p.pagado?'disabled':''}
@@ -1770,7 +1784,11 @@ function descargarResumenPDF(){
 <h2>Pendientes — ${fmt(pendTotal)}</h2>
 <table><thead><tr><th>Concepto</th><th>Categoría</th><th style="text-align:right">Monto</th><th style="text-align:right">Estado</th></tr></thead><tbody>${window._pend.map(p=>`<tr><td>${p.concepto}</td><td>${p.cat}</td><td style="text-align:right;color:${p.pagado?'#1a9e36':'#FF9F0A'}">${fmt(p.monto)}</td><td style="text-align:right;font-weight:600;color:${p.pagado?'#1a9e36':'#d93025'}">${p.pagado?'✓ Pagado':'Pendiente'}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:16px">Sin pendientes</td></tr>'}</tbody></table>
 <h2>Cuentas</h2>
-<table><tbody><tr><td>Deuda Enano</td><td style="text-align:right;font-weight:700;color:#30B0C7">${fmt(window._enanoMonto)}</td></tr><tr><td>Ahorros (acumulado)</td><td style="text-align:right;font-weight:700;color:#b8860b">${fmtUSD(window._ahorrosUSD)}</td></tr></tbody></table>
+<table><tbody>
+<tr><td>Tarjeta Pochi</td><td style="text-align:right;font-weight:700;color:#BF5AF2">${fmt(window._pochiMonto)}</td></tr>
+<tr><td>Deuda Enano</td><td style="text-align:right;font-weight:700;color:#30B0C7">${fmt(window._enanoMonto)}</td></tr>
+<tr><td>Ahorros (acumulado)</td><td style="text-align:right;font-weight:700;color:#b8860b">${fmtUSD(window._ahorrosUSD)}</td></tr>
+</tbody></table>
 <div class="footer">Generado por Mis Finanzas · ${new Date().toLocaleString('es-AR')}</div>
 <script>window.onload=function(){window.print();}<\/script></body></html>`;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);const win=window.open(url,'_blank');
@@ -1835,7 +1853,7 @@ window.addEventListener('beforeinstallprompt',function(e){
 });
 
 if('serviceWorker' in navigator){
-  const swCode=`const CACHE='mis-finanzas-v9';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{if(e.request.url.includes('firebase')||e.request.url.includes('googleapis')||e.request.url.includes('gstatic')){e.respondWith(fetch(e.request));}else{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));}});`;
+  const swCode=`self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>new Response('',{status:408})));});`;
   const blob=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
