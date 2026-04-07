@@ -74,7 +74,8 @@ body {
 
 /* ── BOTTOM NAV ── */
 .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: rgba(0,15,45,0.93); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: 0.5px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding: 8px 0 calc(16px + var(--safe-bottom)); z-index: 200; }
-.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 8px; border: none; background: none; font-family: inherit; color: var(--text2); transition: color .15s; min-width: 52px; }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 8px; border: none; background: none; font-family: inherit; color: var(--text2); transition: color .2s ease, transform .1s ease; min-width: 52px; }
+.nav-item:active { transform: scale(0.9); }
 .nav-item.active { color: var(--blue); }
 .nav-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; height: 24px; }
 .nav-label { font-size: 10px; font-weight: 500; }
@@ -83,8 +84,10 @@ body {
 .fab:active { transform: scale(0.93); }
 
 /* ── PANELS ── */
-.panel { display: none; padding: 0 0 16px; opacity:0; transition: opacity .18s ease; }
-.panel.active { display: block; opacity:1; }
+.panel { display: none; padding: 0 0 16px; }
+.panel.active { display: block; animation: fadeSlideIn .2s ease; }
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes sheetUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
 
 /* ── CARDS ── */
 .card { background: var(--card); border-radius: var(--r); margin: 10px 16px 0; overflow: hidden; border: 0.5px solid var(--border); }
@@ -139,7 +142,8 @@ body {
 .pie-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* ── LIST ROWS ── */
-.list-row { display: flex; align-items: center; padding: 11px 16px; border-top: 0.5px solid var(--sep); gap: 11px; }
+.list-row { display: flex; align-items: center; padding: 11px 16px; border-top: 0.5px solid var(--sep); gap: 11px; transition: background .12s; }
+.list-row:active { background: rgba(255,255,255,0.04); }
 .list-row:first-child { border-top: none; }
 .row-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .row-body { flex: 1; min-width: 0; }
@@ -180,7 +184,7 @@ body {
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .field input:disabled { opacity: 0.5; }
 .save-btn { width: 100%; padding: 15px; background: var(--blue); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; margin-top: 6px; transition: opacity .15s, transform .1s; box-shadow: 0 4px 16px rgba(77,159,255,0.35); }
-.save-btn:active { opacity: .85; transform: scale(0.98); }
+.save-btn:active { opacity: .85; transform: scale(0.97); transition: transform .08s; }
 .form-msg { text-align: center; font-size: 14px; min-height: 20px; margin-top: 10px; }
 
 /* ── AHORROS FORM ── */
@@ -235,9 +239,9 @@ body {
 .mov-cat-box.visible { display: flex; }
 
 /* ── MODAL ── */
-.modal-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
+.modal-overlay { display: none; /* base */ position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
 .modal-overlay.visible { display: flex; }
-.modal-sheet { width: 100%; max-width: 430px; background: #071e52; transition: transform .2s ease; transform: translateY(0); border-radius: 22px 22px 0 0; padding: 16px 20px calc(20px + var(--safe-bottom)); border-top: 0.5px solid var(--border); max-height: 85vh; overflow-y: auto; }
+.modal-sheet { width: 100%; max-width: 430px; background: #071e52; border-radius: 22px 22px 0 0; padding: 16px 20px calc(20px + var(--safe-bottom)); border-top: 0.5px solid var(--border); max-height: 85vh; overflow-y: auto; }
 .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.18); border-radius: 2px; margin: 0 auto 16px; }
 .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 12px; }
@@ -362,6 +366,7 @@ body {
       <div class="info-row-right">
         <div class="info-row-amount" id="ahorros-display" style="color:#FFD60A">USD 0</div>
         <button class="info-row-btn" style="background:rgba(255,214,10,0.15);color:#FFD60A" onclick="event.stopPropagation();abrirEditAhorros()">✏️</button>
+        <button class="info-row-btn" id="ahorros-copy-btn" style="background:rgba(255,214,10,0.15);color:#FFD60A" onclick="event.stopPropagation();copiarAhorros()">📋</button>
       </div>
     </div>
   </div>
@@ -790,9 +795,10 @@ async function loadAll(refs) {
     const cv = parse(c); if (Array.isArray(cv) && cv.length) window._cats = cv;
     if (s.exists()) {
       const sd = s.data();
-      if (sd.pochiMonto !== undefined) window._pochiMonto = parseFloat(sd.pochiMonto) || 0;
-      if (sd.enanoMonto !== undefined) window._enanoMonto = parseFloat(sd.enanoMonto) || 0;
-      if (sd.ahorrosUSD !== undefined) window._ahorrosUSD = parseFloat(sd.ahorrosUSD) || 0;
+      // Use isNaN check instead of || 0 so that actual 0 values are preserved
+      if (sd.pochiMonto !== undefined && sd.pochiMonto !== null) window._pochiMonto = isNaN(parseFloat(sd.pochiMonto)) ? 0 : parseFloat(sd.pochiMonto);
+      if (sd.enanoMonto !== undefined && sd.enanoMonto !== null) window._enanoMonto = isNaN(parseFloat(sd.enanoMonto)) ? 0 : parseFloat(sd.enanoMonto);
+      if (sd.ahorrosUSD !== undefined && sd.ahorrosUSD !== null) window._ahorrosUSD = isNaN(parseFloat(sd.ahorrosUSD)) ? 0 : parseFloat(sd.ahorrosUSD);
       if (sd.lastMes) window._lastMes = sd.lastMes;
     }
     const av = parse(a); if (Array.isArray(av)) window._archive = av;
@@ -801,6 +807,8 @@ async function loadAll(refs) {
     const plv = parse(pl); if (Array.isArray(plv)) window._pochiLog = plv;
     setSyncStatus('ok');
   } catch(e) { console.error('Load error', e); setSyncStatus('err'); }
+  // Force render after load regardless of errors
+  if(window._fbReady && typeof window._renderAll === 'function') window._renderAll();
 }
 
 function setupListeners(refs) {
@@ -816,9 +824,9 @@ function setupListeners(refs) {
   onSnapshot(refs.scalars, snap => {
     if (!window._fbReady || !snap.exists()) return;
     const s = snap.data(); let changed = false;
-    if (s.pochiMonto !== undefined && parseFloat(s.pochiMonto) !== window._pochiMonto) { window._pochiMonto = parseFloat(s.pochiMonto)||0; changed=true; }
-    if (s.enanoMonto !== undefined && parseFloat(s.enanoMonto) !== window._enanoMonto) { window._enanoMonto = parseFloat(s.enanoMonto)||0; changed=true; }
-    if (s.ahorrosUSD !== undefined && parseFloat(s.ahorrosUSD) !== window._ahorrosUSD) { window._ahorrosUSD = parseFloat(s.ahorrosUSD)||0; changed=true; }
+    if (s.pochiMonto !== undefined && s.pochiMonto !== null) { const v = isNaN(parseFloat(s.pochiMonto)) ? 0 : parseFloat(s.pochiMonto); if(v !== window._pochiMonto){window._pochiMonto=v;changed=true;} }
+    if (s.enanoMonto !== undefined && s.enanoMonto !== null) { const v = isNaN(parseFloat(s.enanoMonto)) ? 0 : parseFloat(s.enanoMonto); if(v !== window._enanoMonto){window._enanoMonto=v;changed=true;} }
+    if (s.ahorrosUSD !== undefined && s.ahorrosUSD !== null) { const v = isNaN(parseFloat(s.ahorrosUSD)) ? 0 : parseFloat(s.ahorrosUSD); if(v !== window._ahorrosUSD){window._ahorrosUSD=v;changed=true;} }
     if (changed) window._renderAll();
   });
   onSnapshot(refs.enanoLog, snap => { if (!snap.exists()) return; const v = parse(snap); if (Array.isArray(v)) window._enanoLog = v; });
@@ -907,7 +915,14 @@ function _safeSave(key, value) {
 function saveData()      { _safeSave('data', window._data); }
 function savePend()      { _safeSave('pend', window._pend); }
 function saveCats()      { _safeSave('cats', window._cats); }
-function saveScalars()   { _safeSave('scalars',{pochiMonto:window._pochiMonto,enanoMonto:window._enanoMonto,ahorrosUSD:window._ahorrosUSD,lastMes:window._lastMes}); }
+function saveScalars() {
+  _safeSave('scalars', {
+    pochiMonto: typeof window._pochiMonto === 'number' ? window._pochiMonto : 0,
+    enanoMonto: typeof window._enanoMonto === 'number' ? window._enanoMonto : 0,
+    ahorrosUSD: typeof window._ahorrosUSD === 'number' ? window._ahorrosUSD : 0,
+    lastMes: window._lastMes || null
+  });
+}
 function saveArchive()   { _safeSave('archive', window._archive); }
 function saveEnanoLog()  { _safeSave('enanoLog', window._enanoLog); }
 function saveAhorrosLog(){ _safeSave('ahorrosLog', window._ahorrosLog); }
@@ -997,7 +1012,7 @@ function abrirEditPochi() { document.getElementById('pochi-input').value=window.
 function cerrarEditPochi() { document.getElementById('modal-pochi').classList.remove('visible'); }
 function guardarPochi() {
   pushUndo(snapshotState());
-  var newVal=parseFloat(document.getElementById('pochi-input').value)||0;
+  var newVal=parseFloat(document.getElementById('pochi-input').value); newVal=isNaN(newVal)?0:newVal;
   var oldVal=window._pochiMonto;
   window._pochiMonto=newVal;
   if(!window._pochiLog) window._pochiLog=[];
@@ -1017,7 +1032,7 @@ function cerrarEditEnano() { document.getElementById('modal-enano').classList.re
 function guardarEnano() {
   pushUndo(snapshotState());
   const raw=parseFloat(document.getElementById('enano-input').value)||0;
-  window._enanoMonto=document.getElementById('enano-signo').value==='neg'?-Math.abs(raw):Math.abs(raw);
+  var enanoVal=document.getElementById('enano-signo').value==='neg'?-Math.abs(raw):Math.abs(raw); window._enanoMonto=isNaN(enanoVal)?0:enanoVal;
   saveScalars(); cerrarEditEnano(); window._renderAll();
 }
 function copiarPochi() {
@@ -1068,6 +1083,17 @@ function guardarEnanoReg() {
 }
 
 // ── AHORROS ──
+function copiarAhorros() {
+  var texto = 'Ahorros: ' + fmtUSD(window._ahorrosUSD);
+  navigator.clipboard.writeText(texto).catch(function() {
+    var ta = document.createElement('textarea'); ta.value = texto;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  var btn = document.getElementById('ahorros-copy-btn');
+  btn.textContent = '✓'; btn.style.color = 'var(--green)';
+  setTimeout(function() { btn.textContent = '📋'; btn.style.color = '#FFD60A'; }, 2000);
+}
+
 function abrirEditAhorros() { document.getElementById('ahorros-input').value=window._ahorrosUSD||''; document.getElementById('modal-ahorros').classList.add('visible'); setTimeout(()=>document.getElementById('ahorros-input').focus(),200); }
 function cerrarEditAhorros() { document.getElementById('modal-ahorros').classList.remove('visible'); }
 function guardarAhorrosManual() { pushUndo(snapshotState()); window._ahorrosUSD=parseFloat(document.getElementById('ahorros-input').value)||0; saveScalars(); cerrarEditAhorros(); window._renderAll(); }
@@ -1792,7 +1818,13 @@ window._initApp=function(){
   renderInicio();
 };
 
-setTimeout(()=>{if(!window._fbReady){window._fbReady=true;window._initApp();}},5000);
+// Only show login if Firebase hasn't connected after 6s (offline scenario)
+setTimeout(()=>{
+  if(!window._fbReady){
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('login-err').textContent='Sin conexión. Verificá internet.';
+  }
+},6000);
 </script>
 
 <script>
@@ -1803,7 +1835,7 @@ window.addEventListener('beforeinstallprompt',function(e){
 });
 
 if('serviceWorker' in navigator){
-  const swCode=`const CACHE='mis-finanzas-v8';const URLS=[self.location.pathname];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
+  const swCode=`const CACHE='mis-finanzas-v9';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{if(e.request.url.includes('firebase')||e.request.url.includes('googleapis')||e.request.url.includes('gstatic')){e.respondWith(fetch(e.request));}else{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));}});`;
   const blob=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
