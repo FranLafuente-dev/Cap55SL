@@ -61,10 +61,10 @@ body {
 
 /* ── HEADER ── */
 .header { padding: calc(52px + var(--safe-top)) 20px 8px; background: var(--bg); position: sticky; top: 0; z-index: 100; }
-.header-top { display: flex; justify-content: space-between; align-items: center; }
+.header-top { display: flex; justify-content: space-between; align-items: flex-end; }
 .header-greeting { font-size: 13px; color: var(--text2); font-weight: 500; letter-spacing: .3px; }
 .app-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: #fff; margin-top: 2px; }
-.date-pill { font-size: 13px; color: var(--text2); background: var(--card); padding: 5px 11px; border-radius: 20px; border: 0.5px solid var(--border); display: flex; align-items: center; }
+.date-pill { font-size: 13px; color: var(--text2); background: var(--card); padding: 5px 11px; border-radius: 20px; border: 0.5px solid var(--border); display: flex; align-items: center; margin-bottom: 2px; }
 
 /* ── UNDO BAR ── */
 .undo-bar { display: flex; gap: 8px; padding: 6px 16px 0; justify-content: flex-end; }
@@ -338,6 +338,7 @@ body {
       <div class="info-row-right">
         <div class="info-row-amount" id="pochi-display" style="color:#CF8EF4">$0</div>
         <button class="info-row-btn" style="background:rgba(191,90,242,0.15);color:#BF5AF2" onclick="event.stopPropagation();abrirEditPochi()">✏️</button>
+        <button class="info-row-btn" id="pochi-copy-btn" style="background:rgba(191,90,242,0.15);color:#BF5AF2" onclick="event.stopPropagation();copiarPochi()">📋</button>
       </div>
     </div>
     <!-- Enano -->
@@ -755,6 +756,7 @@ function getRefs(uid) {
     archive:    doc(db, base, 'archive'),
     enanoLog:   doc(db, base, 'enanoLog'),
     ahorrosLog: doc(db, base, 'ahorrosLog'),
+    pochiLog:   doc(db, base, 'pochiLog'),
   };
 }
 
@@ -777,10 +779,10 @@ window._fbSave = async function(key, value) {
 async function loadAll(refs) {
   setSyncStatus('syncing');
   try {
-    const [d,p,c,s,a,el,al] = await Promise.all([
+    const [d,p,c,s,a,el,al,pl] = await Promise.all([
       getDoc(refs.data), getDoc(refs.pend), getDoc(refs.cats),
       getDoc(refs.scalars), getDoc(refs.archive),
-      getDoc(refs.enanoLog), getDoc(refs.ahorrosLog)
+      getDoc(refs.enanoLog), getDoc(refs.ahorrosLog), getDoc(refs.pochiLog)
     ]);
     const parse = (snap) => { try { return JSON.parse(snap.data()?.v || 'null'); } catch { return null; } };
     const dv = parse(d); if (Array.isArray(dv)) window._data = dv;
@@ -796,6 +798,7 @@ async function loadAll(refs) {
     const av = parse(a); if (Array.isArray(av)) window._archive = av;
     const elv = parse(el); if (Array.isArray(elv)) window._enanoLog = elv;
     const alv = parse(al); if (Array.isArray(alv)) window._ahorrosLog = alv;
+    const plv = parse(pl); if (Array.isArray(plv)) window._pochiLog = plv;
     setSyncStatus('ok');
   } catch(e) { console.error('Load error', e); setSyncStatus('err'); }
 }
@@ -820,6 +823,7 @@ function setupListeners(refs) {
   });
   onSnapshot(refs.enanoLog, snap => { if (!snap.exists()) return; const v = parse(snap); if (Array.isArray(v)) window._enanoLog = v; });
   onSnapshot(refs.ahorrosLog, snap => { if (!snap.exists()) return; const v = parse(snap); if (Array.isArray(v)) window._ahorrosLog = v; });
+  onSnapshot(refs.pochiLog, snap => { if (!snap.exists()) return; const v = parse(snap); if (Array.isArray(v)) window._pochiLog = v; });
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -877,6 +881,7 @@ window._lastMes    = null;
 window._archive    = [];
 window._enanoLog   = [];
 window._ahorrosLog = [];
+window._pochiLog   = [];
 window._fbReady    = false;
 window._fbRefs     = null;
 
@@ -929,13 +934,14 @@ function doLogin() {
 // ── UNDO/REDO ──
 let _undoStack=[], _redoStack=[];
 function snapshotState() {
-  return { data:JSON.stringify(window._data), pend:JSON.stringify(window._pend), pochiMonto:window._pochiMonto, enanoMonto:window._enanoMonto, ahorrosUSD:window._ahorrosUSD, enanoLog:JSON.stringify(window._enanoLog), ahorrosLog:JSON.stringify(window._ahorrosLog) };
+  return { data:JSON.stringify(window._data), pend:JSON.stringify(window._pend), pochiMonto:window._pochiMonto, enanoMonto:window._enanoMonto, ahorrosUSD:window._ahorrosUSD, enanoLog:JSON.stringify(window._enanoLog), ahorrosLog:JSON.stringify(window._ahorrosLog), pochiLog:JSON.stringify(window._pochiLog||[]) };
 }
 function applySnapshot(s) {
   window._data=JSON.parse(s.data); window._pend=JSON.parse(s.pend);
   window._pochiMonto=s.pochiMonto; window._enanoMonto=s.enanoMonto; window._ahorrosUSD=s.ahorrosUSD;
   window._enanoLog=JSON.parse(s.enanoLog); window._ahorrosLog=JSON.parse(s.ahorrosLog);
-  saveData(); savePend(); saveScalars(); saveEnanoLog(); saveAhorrosLog();
+  window._pochiLog=JSON.parse(s.pochiLog||'[]');
+  saveData(); savePend(); saveScalars(); saveEnanoLog(); saveAhorrosLog(); _safeSave('pochiLog',window._pochiLog);
   window._renderAll();
 }
 function pushUndo(snap) { _undoStack.push(snap); if(_undoStack.length>30) _undoStack.shift(); _redoStack=[]; updateUndoButtons(); }
@@ -989,7 +995,16 @@ function setHeaderDate() {
 // ── POCHI ──
 function abrirEditPochi() { document.getElementById('pochi-input').value=window._pochiMonto||''; document.getElementById('modal-pochi').classList.add('visible'); setTimeout(()=>document.getElementById('pochi-input').focus(),200); }
 function cerrarEditPochi() { document.getElementById('modal-pochi').classList.remove('visible'); }
-function guardarPochi() { pushUndo(snapshotState()); window._pochiMonto=parseFloat(document.getElementById('pochi-input').value)||0; saveScalars(); cerrarEditPochi(); window._renderAll(); }
+function guardarPochi() {
+  pushUndo(snapshotState());
+  var newVal=parseFloat(document.getElementById('pochi-input').value)||0;
+  var oldVal=window._pochiMonto;
+  window._pochiMonto=newVal;
+  if(!window._pochiLog) window._pochiLog=[];
+  window._pochiLog.push({id:nextId(window._pochiLog),concepto:'Nuevo saldo',monto:newVal-oldVal,fecha:nowYMD(),tipo:'ajuste',saldo:newVal});
+  saveScalars(); _safeSave('pochiLog', window._pochiLog);
+  cerrarEditPochi(); window._renderAll();
+}
 
 // ── ENANO ──
 function abrirEditEnano() {
@@ -1005,6 +1020,18 @@ function guardarEnano() {
   window._enanoMonto=document.getElementById('enano-signo').value==='neg'?-Math.abs(raw):Math.abs(raw);
   saveScalars(); cerrarEditEnano(); window._renderAll();
 }
+function copiarPochi() {
+  var m = window._pochiMonto;
+  var texto = m >= 0 ? 'Te debo ' + fmt(m) : 'A favor próximo mes ' + fmt(Math.abs(m));
+  navigator.clipboard.writeText(texto).catch(function() {
+    var ta = document.createElement('textarea'); ta.value = texto;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+  var btn = document.getElementById('pochi-copy-btn');
+  btn.textContent = '✓'; btn.style.color = 'var(--green)';
+  setTimeout(function() { btn.textContent = '📋'; btn.style.color = '#BF5AF2'; }, 2000);
+}
+
 function copiarEnano() {
   const m=window._enanoMonto;
   const texto=m>=0?`Me debes ${fmt(m)}`:`Te debo ${fmt(Math.abs(m))}`;
@@ -1189,8 +1216,36 @@ function renderDetalleList() {
       </div>`;
     }).join('');
   } else if(_detalleActual==='pochi') {
-    el.innerHTML='<div style="padding:20px 16px;text-align:center;color:var(--text2);font-size:14px">El saldo de Tarjeta Pochi se edita manualmente.<br><br>Tocá ✏️ Editar para actualizar el monto.</div>';
+    var plogs=[...(window._pochiLog||[])].reverse();
+    if(!plogs.length){
+      el.innerHTML='<div style="padding:20px 16px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos registrados.<br><br>Los gastos de categoría Tarjeta Pochi se descuentan automáticamente.</div>';
+    } else {
+      el.innerHTML=plogs.map(function(l){
+        var isPos=l.monto>=0;
+        var label=l.tipo==='ajuste'?('Nuevo saldo: '+fmt(l.saldo||0)):l.concepto;
+        return '<div class="list-row">'+
+          '<div class="row-icon" style="background:rgba(191,90,242,0.15)">💳</div>'+
+          '<div class="row-body"><div class="row-name">'+label+'</div><div class="row-sub">'+(l.fecha?fmtDate(l.fecha):'')+'</div></div>'+
+          '<div class="row-right"><div class="row-amount" style="color:'+(isPos?'var(--green)':'var(--red)')+'">'+
+          (isPos?'+':'−')+fmt(Math.abs(l.monto))+'</div></div>'+
+          '<button class="del-btn" onclick="eliminarPochiLog('+l.id+')">✕</button>'+
+        '</div>';
+      }).join('');
+    }
   }
+}
+
+// ── ELIMINAR POCHI LOG ──
+function eliminarPochiLog(id){
+  var l=(window._pochiLog||[]).find(function(e){return e.id===id;});
+  if(!l)return;
+  if(!confirm('¿Revertir este movimiento de Pochi?'))return;
+  pushUndo(snapshotState());
+  window._pochiMonto-=l.monto;
+  if(l.dataId){window._data=window._data.filter(function(d){return d.id!==l.dataId;});saveData();}
+  window._pochiLog=window._pochiLog.filter(function(e){return e.id!==id;});
+  saveScalars();_safeSave('pochiLog',window._pochiLog);
+  renderDetalleList();window._renderAll();
 }
 
 // ── EDITAR/ELIMINAR ENANO LOG ──
@@ -1326,8 +1381,20 @@ function guardar() {
     window._pend.push({id:nextId(window._pend),concepto,cat:document.getElementById('f-cat').value,monto:Math.abs(monto),pagado:false});
     savePend();
   } else {
-    window._data.push({id:nextId(window._data),tipo,fecha:nowYMD(),concepto,cat:tipo==='ingreso'?'Ingreso':document.getElementById('f-cat').value,monto});
+    var cat=tipo==='ingreso'?'Ingreso':document.getElementById('f-cat').value;
+    var newEntry={id:nextId(window._data),tipo,fecha:nowYMD(),concepto,cat,monto};
+    window._data.push(newEntry);
     saveData();
+    // Auto-deduct from Pochi if gasto category is Tarjeta Pochi
+    if(tipo==='gasto' && cat==='Tarjeta Pochi'){
+      var delta=-Math.abs(monto);
+      window._pochiMonto+=delta;
+      // Log as pochi movement
+      if(!window._pochiLog) window._pochiLog=[];
+      window._pochiLog.push({id:nextId(window._pochiLog),concepto:concepto,monto:delta,fecha:nowYMD(),tipo:'gasto',dataId:newEntry.id});
+      saveScalars();
+      _safeSave('pochiLog', window._pochiLog);
+    }
   }
   msg.style.color='var(--green)'; msg.textContent='✓ Guardado';
   document.getElementById('f-monto').value=''; document.getElementById('f-concepto').value='';
@@ -1684,6 +1751,18 @@ function descargarResumenPDF(){
   if(!win){const a=document.createElement('a');a.href=url;a.download='MisFinanzas_'+mesNombre.replace(' ','_')+'.html';a.click();}
 }
 
+// ── ANDROID HARDWARE BACK ──
+window.addEventListener('popstate', function() {
+  var active = document.querySelector('.panel.active');
+  if (!active) return;
+  var id = active.id;
+  var navItems = document.querySelectorAll('.nav-item');
+  if (id === 'panel-inicio') { history.pushState(null,'',location.href); return; }
+  switchPanel('inicio', navItems[0]);
+  history.pushState(null, '', location.href);
+});
+history.pushState(null, '', location.href);
+
 // ── SWIPE BACK ──
 (function(){
   var startX=0, startY=0;
@@ -1724,7 +1803,7 @@ window.addEventListener('beforeinstallprompt',function(e){
 });
 
 if('serviceWorker' in navigator){
-  const swCode=`const CACHE='mis-finanzas-v6';const URLS=[self.location.pathname];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
+  const swCode=`const CACHE='mis-finanzas-v8';const URLS=[self.location.pathname];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(URLS)));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(e.request))));});`;
   const blob=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
