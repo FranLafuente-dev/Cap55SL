@@ -25,7 +25,7 @@
   --r: 16px; --rl: 22px;
   --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-html { background: var(--bg); }
+html, body { background: var(--bg); min-height: 100vh; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg); color: var(--text); min-height: 100vh;
@@ -84,7 +84,7 @@ body {
 .fab:active { transform: scale(0.93); }
 
 /* ── PANELS ── */
-.panel { display: none; padding: 0 0 16px; background: var(--bg); }
+.panel { display: none; padding: 0 0 16px; background: var(--bg); min-height: 100vh; }
 .panel.active { display: block; animation: fadeIn .12s ease; }
 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 @keyframes sheetUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
@@ -261,17 +261,6 @@ body {
 </style>
 </head>
 <body>
-
-<!-- LOGIN -->
-<div id="login-screen" style="display:none">
-  <div style="font-size:48px;margin-bottom:16px">💰</div>
-  <h1>Mis Finanzas</h1>
-  <p>Ingresá con tu cuenta para acceder</p>
-  <div class="login-field"><input type="email" id="login-email" placeholder="Email" inputmode="email" autocomplete="email"></div>
-  <div class="login-field"><input type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password"></div>
-  <button class="login-btn" onclick="doLogin()">Ingresar</button>
-  <div class="login-err" id="login-err"></div>
-</div>
 
 <!-- HEADER -->
 <div class="header">
@@ -733,20 +722,14 @@ const firebaseConfig = {
   appId: "1:249017917046:web:198ad17d39b88eae86c957"
 };
 
+const _AU='lafuentefrancisco@hotmail.com.ar';
+const _AP='f1r9a9n2';
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
+setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
-// Set persistence FIRST before any auth operations
-setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
 
-window._doLogin = async function(email, pass) {
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch(e) {
-    document.getElementById('login-err').textContent = 'Email o contraseña incorrectos';
-  }
-};
 
 function setSyncStatus(s) {
   const dot = document.getElementById('sync-dot');
@@ -797,10 +780,19 @@ async function loadAll(refs) {
     const cv = parse(c); if (Array.isArray(cv) && cv.length) window._cats = cv;
     if (s.exists()) {
       const sd = s.data();
-      // Use isNaN check instead of || 0 so that actual 0 values are preserved
-      if (sd.pochiMonto !== undefined && sd.pochiMonto !== null) window._pochiMonto = isNaN(parseFloat(sd.pochiMonto)) ? 0 : parseFloat(sd.pochiMonto);
-      if (sd.enanoMonto !== undefined && sd.enanoMonto !== null) window._enanoMonto = isNaN(parseFloat(sd.enanoMonto)) ? 0 : parseFloat(sd.enanoMonto);
-      if (sd.ahorrosUSD !== undefined && sd.ahorrosUSD !== null) window._ahorrosUSD = isNaN(parseFloat(sd.ahorrosUSD)) ? 0 : parseFloat(sd.ahorrosUSD);
+      // Read as number directly - Firestore int64 comes as JS Number
+      if (sd.pochiMonto !== undefined && sd.pochiMonto !== null) {
+        const v = Number(sd.pochiMonto);
+        window._pochiMonto = isFinite(v) ? v : 0;
+      }
+      if (sd.enanoMonto !== undefined && sd.enanoMonto !== null) {
+        const v = Number(sd.enanoMonto);
+        window._enanoMonto = isFinite(v) ? v : 0;
+      }
+      if (sd.ahorrosUSD !== undefined && sd.ahorrosUSD !== null) {
+        const v = Number(sd.ahorrosUSD);
+        window._ahorrosUSD = isFinite(v) ? v : 0;
+      }
       if (sd.lastMes) window._lastMes = sd.lastMes;
     }
     const av = parse(a); if (Array.isArray(av)) window._archive = av;
@@ -809,8 +801,7 @@ async function loadAll(refs) {
     const plv = parse(pl); if (Array.isArray(plv)) window._pochiLog = plv;
     setSyncStatus('ok');
   } catch(e) { console.error('Load error', e); setSyncStatus('err'); }
-  // Force render after load regardless of errors
-  if(window._fbReady && typeof window._renderAll === 'function') window._renderAll();
+  // loadAll complete - caller sets _fbReady and calls _initApp
 }
 
 function setupListeners(refs) {
@@ -826,9 +817,9 @@ function setupListeners(refs) {
   onSnapshot(refs.scalars, snap => {
     if (!window._fbReady || !snap.exists()) return;
     const s = snap.data(); let changed = false;
-    if (s.pochiMonto !== undefined && s.pochiMonto !== null) { const v = isNaN(parseFloat(s.pochiMonto)) ? 0 : parseFloat(s.pochiMonto); if(v !== window._pochiMonto){window._pochiMonto=v;changed=true;} }
-    if (s.enanoMonto !== undefined && s.enanoMonto !== null) { const v = isNaN(parseFloat(s.enanoMonto)) ? 0 : parseFloat(s.enanoMonto); if(v !== window._enanoMonto){window._enanoMonto=v;changed=true;} }
-    if (s.ahorrosUSD !== undefined && s.ahorrosUSD !== null) { const v = isNaN(parseFloat(s.ahorrosUSD)) ? 0 : parseFloat(s.ahorrosUSD); if(v !== window._ahorrosUSD){window._ahorrosUSD=v;changed=true;} }
+    if (s.pochiMonto !== undefined && s.pochiMonto !== null) { const v=Number(s.pochiMonto); if(isFinite(v)&&v!==window._pochiMonto){window._pochiMonto=v;changed=true;} }
+    if (s.enanoMonto !== undefined && s.enanoMonto !== null) { const v=Number(s.enanoMonto); if(isFinite(v)&&v!==window._enanoMonto){window._enanoMonto=v;changed=true;} }
+    if (s.ahorrosUSD !== undefined && s.ahorrosUSD !== null) { const v=Number(s.ahorrosUSD); if(isFinite(v)&&v!==window._ahorrosUSD){window._ahorrosUSD=v;changed=true;} }
     if (changed) window._renderAll();
   });
   onSnapshot(refs.enanoLog, snap => { if (!snap.exists()) return; const v = parse(snap); if (Array.isArray(v)) window._enanoLog = v; });
@@ -838,24 +829,19 @@ function setupListeners(refs) {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    document.getElementById('login-screen').style.display = 'none';
     window._fbRefs = getRefs(user.uid);
     await loadAll(window._fbRefs);
     setupListeners(window._fbRefs);
     window._fbReady = true;
     window._initApp();
   } else {
-    // Not logged in - show login screen
-    document.getElementById('login-screen').style.display = 'flex';
-    window._fbReady = false;
+    try {
+      await signInWithEmailAndPassword(auth, _AU, _AP);
+    } catch(e) {
+      document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;padding:32px;text-align:center;color:#fff;background:#00153d"><div style="font-size:48px">⚠️</div><div style="font-size:18px;font-weight:600">Sin conexión</div><div style="font-size:14px;color:rgba(255,255,255,0.6)">Verificá tu internet y volvé a intentar.</div><button onclick="location.reload()" style="margin-top:16px;padding:12px 28px;background:#4D9FFF;border:none;border-radius:12px;color:white;font-size:16px;font-weight:600;cursor:pointer">Reintentar</button></div>';
+    }
   }
 });
-// Show login after 3s if Firebase hasn't responded (offline/slow)
-setTimeout(function(){
-  if(!window._fbReady){
-    document.getElementById('login-screen').style.display='flex';
-  }
-}, 3000);
 </script>
 
 <script>
@@ -864,13 +850,13 @@ const CATS_DEFAULT = ['Alimentos','Delfi','Efectivo','Gastos varios FS','Impuest
 const CAT_EMOJIS = {
   Alimentos:'🛒',Salud:'💊',Impuestos:'🏛️',Delfi:'👧',Servicios:'⚡',Transporte:'🚗',Ropa:'👕',Ocio:'🎬',
   Educación:'📚',Vivienda:'🏠',Ingreso:'💰',Otros:'📦',Meli:'🛍️','Tarjeta Pochi':'💳',Efectivo:'💵',
-  'Gastos varios FS':'📋',Suscripciones:'📱',Ajuste:'⚖️',Ahorro:'💰',Ahorros:'💰'
+  'Gastos varios FS':'📋',Suscripciones:'📱',Ajuste:'⚖️',Ahorro:'💰',Ahorros:'💰',Ahorros:'💰'
 };
 const CAT_HEX_MAP = {
   Alimentos:'#32D74B',Salud:'#4D9FFF',Impuestos:'#FF9F0A',Delfi:'#BF5AF2',Servicios:'#5AC8FA',
   Transporte:'#30B0C7',Ocio:'#FF6B6B',Vivienda:'#FF9F0A',Ingreso:'#32D74B',Meli:'#FFD60A',
   'Tarjeta Pochi':'#CF8EF4',Efectivo:'#63E6A0','Gastos varios FS':'#74B9FF',Suscripciones:'#FF7675',
-  Otros:'#8E8E93',Ajuste:'#8E8E93',Ahorro:'#FFD60A',Ahorros:'#FFD60A'
+  Otros:'#8E8E93',Ajuste:'#8E8E93',Ahorro:'#FFD60A',Ahorros:'#FFD60A',Ahorros:'#FFD60A'
 };
 const TIPO_CONFIG = {
   gasto:     {emoji:'💸',color:'rgba(255,69,58,0.2)',  cls:'active-gasto',    label:'Nuevo gasto'},
@@ -919,9 +905,9 @@ function savePend()      { _safeSave('pend', window._pend); }
 function saveCats()      { _safeSave('cats', window._cats); }
 function saveScalars() {
   _safeSave('scalars', {
-    pochiMonto: typeof window._pochiMonto === 'number' ? window._pochiMonto : 0,
-    enanoMonto: typeof window._enanoMonto === 'number' ? window._enanoMonto : 0,
-    ahorrosUSD: typeof window._ahorrosUSD === 'number' ? window._ahorrosUSD : 0,
+    pochiMonto: Number(window._pochiMonto) || 0,
+    enanoMonto: Number(window._enanoMonto) || 0,
+    ahorrosUSD: Number(window._ahorrosUSD) || 0,
     lastMes: window._lastMes || null
   });
 }
@@ -929,24 +915,7 @@ function saveArchive()   { _safeSave('archive', window._archive); }
 function saveEnanoLog()  { _safeSave('enanoLog', window._enanoLog); }
 function saveAhorrosLog(){ _safeSave('ahorrosLog', window._ahorrosLog); }
 
-// ── LOGIN ──
-function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-pass').value;
-  if (!email||!pass) { document.getElementById('login-err').textContent='Completá email y contraseña'; return; }
-  document.getElementById('login-err').textContent='Conectando...';
-  if (typeof window._doLogin === 'function') {
-    window._doLogin(email, pass);
-  } else {
-    setTimeout(function() {
-      if (typeof window._doLogin === 'function') {
-        window._doLogin(email, pass);
-      } else {
-        document.getElementById('login-err').textContent='Error de conexión. Recargá la página.';
-      }
-    }, 2000);
-  }
-}
+// auto-login
 
 // ── UNDO/REDO ──
 let _undoStack=[], _redoStack=[];
@@ -1850,9 +1819,7 @@ window._initApp=function(){
 // Only show login if Firebase hasn't connected after 6s (offline scenario)
 setTimeout(()=>{
   if(!window._fbReady){
-    document.getElementById('login-screen').style.display='flex';
-    document.getElementById('login-err').textContent='Sin conexión. Verificá internet.';
-  }
+    }
 },6000);
 </script>
 
