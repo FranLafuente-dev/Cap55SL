@@ -84,9 +84,9 @@ body {
 .fab:active { transform: scale(0.93); }
 
 /* ── PANELS ── */
-.panel { display: none; padding: 0 0 16px; }
-.panel.active { display: block; animation: fadeSlideIn .15s ease; }
-@keyframes fadeSlideIn { from { opacity:0; } to { opacity:1; } }
+.panel { display: none; padding: 0 0 16px; background: var(--bg); }
+.panel.active { display: block; animation: fadeIn .12s ease; }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 @keyframes sheetUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
 /* ── CARDS ── */
@@ -864,13 +864,13 @@ const CATS_DEFAULT = ['Alimentos','Delfi','Efectivo','Gastos varios FS','Impuest
 const CAT_EMOJIS = {
   Alimentos:'🛒',Salud:'💊',Impuestos:'🏛️',Delfi:'👧',Servicios:'⚡',Transporte:'🚗',Ropa:'👕',Ocio:'🎬',
   Educación:'📚',Vivienda:'🏠',Ingreso:'💰',Otros:'📦',Meli:'🛍️','Tarjeta Pochi':'💳',Efectivo:'💵',
-  'Gastos varios FS':'📋',Suscripciones:'📱',Ajuste:'⚖️',Ahorro:'💰'
+  'Gastos varios FS':'📋',Suscripciones:'📱',Ajuste:'⚖️',Ahorro:'💰',Ahorros:'💰'
 };
 const CAT_HEX_MAP = {
   Alimentos:'#32D74B',Salud:'#4D9FFF',Impuestos:'#FF9F0A',Delfi:'#BF5AF2',Servicios:'#5AC8FA',
   Transporte:'#30B0C7',Ocio:'#FF6B6B',Vivienda:'#FF9F0A',Ingreso:'#32D74B',Meli:'#FFD60A',
   'Tarjeta Pochi':'#CF8EF4',Efectivo:'#63E6A0','Gastos varios FS':'#74B9FF',Suscripciones:'#FF7675',
-  Otros:'#8E8E93',Ajuste:'#8E8E93',Ahorro:'#FFD60A'
+  Otros:'#8E8E93',Ajuste:'#8E8E93',Ahorro:'#FFD60A',Ahorros:'#FFD60A'
 };
 const TIPO_CONFIG = {
   gasto:     {emoji:'💸',color:'rgba(255,69,58,0.2)',  cls:'active-gasto',    label:'Nuevo gasto'},
@@ -1138,7 +1138,7 @@ function guardarAhorro() {
   if(ars>0){
     var tipoMovimiento=op==='sumar'?'gasto':'ingreso';
     var conceptoMovimiento=op==='sumar'?'Compra USD (ahorro)':'Venta USD (ahorro)';
-    window._data.push({id:nextId(window._data),tipo:tipoMovimiento,fecha:nowYMD(),concepto:conceptoMovimiento,cat:op==='sumar'?'Efectivo':'Ingreso',monto:ars});
+    window._data.push({id:nextId(window._data),tipo:tipoMovimiento,fecha:nowYMD(),concepto:conceptoMovimiento,cat:'Ahorros',monto:ars});
     saveData();
   }
   msg.style.color='var(--green)'; msg.textContent='✓ Ahorro registrado';
@@ -1364,14 +1364,25 @@ function eliminarAhorroLog(id) {
 
 // ── NAVIGATION ──
 function switchPanel(name, btn) {
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  var prev = document.querySelector('.panel.active');
+  var next = document.getElementById('panel-'+name);
+  if(prev && prev !== next) {
+    // Render next panel content BEFORE showing it to avoid flash
+    if(name==='inicio') renderInicio();
+    if(name==='movimientos') renderMovimientos();
+    if(name==='pendientes') renderPendientesTab();
+    if(name==='resumen') renderResumen();
+    prev.classList.remove('active');
+    next.classList.add('active');
+  } else if(!prev) {
+    if(name==='inicio') renderInicio();
+    if(name==='movimientos') renderMovimientos();
+    if(name==='pendientes') renderPendientesTab();
+    if(name==='resumen') renderResumen();
+    next.classList.add('active');
+  }
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');
   if(btn&&btn.classList&&btn.classList.contains('nav-item')) btn.classList.add('active');
-  if(name==='inicio') renderInicio();
-  if(name==='movimientos') renderMovimientos();
-  if(name==='pendientes') renderPendientesTab();
-  if(name==='resumen') renderResumen();
 }
 function irMovFiltrado(f) {
   switchPanel('movimientos', document.querySelectorAll('.nav-item')[1]);
