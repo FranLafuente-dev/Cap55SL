@@ -25,7 +25,7 @@
   --r: 16px; --rl: 22px;
   --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-html, body { background: var(--bg); min-height: 100vh; }
+html { background: var(--bg); }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg); color: var(--text); min-height: 100vh;
@@ -84,7 +84,7 @@ body {
 .fab:active { transform: scale(0.93); }
 
 /* ── PANELS ── */
-.panel { display: none; padding: 0 0 16px; background: var(--bg); min-height: 100vh; }
+.panel { display: none; padding: 0 0 16px; background: var(--bg); }
 .panel.active { display: block; animation: fadeIn .12s ease; }
 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 @keyframes sheetUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
@@ -258,9 +258,38 @@ body {
 /* cierre mes */
 .mes-cierre-banner { background: rgba(255,159,10,0.12); border: 1px solid rgba(255,159,10,0.3); border-radius: 14px; margin: 10px 16px 0; padding: 12px 16px; font-size: 13px; color: var(--orange); font-weight: 500; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .cierre-btn { padding: 6px 12px; border-radius: 8px; background: rgba(255,159,10,0.2); border: 1px solid rgba(255,159,10,0.4); color: var(--orange); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+
+/* ── TOAST ── */
+#app-toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: rgba(30,40,80,0.96); color: #fff; padding: 12px 22px; border-radius: 14px; font-size: 14px; font-weight: 600; z-index: 9998; box-shadow: 0 4px 20px rgba(0,0,0,0.35); border: 0.5px solid rgba(255,255,255,0.12); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .25s; }
+#app-toast.show { opacity: 1; }
+
+/* ── CONFIRM MODAL ── */
+.confirm-icon { font-size: 36px; text-align: center; margin-bottom: 10px; }
+.confirm-msg { font-size: 15px; color: var(--text2); text-align: center; margin-bottom: 20px; line-height: 1.5; }
+
+/* ── STEPPER BTNS ── */
+.stepper-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.step-btn { flex: 1; min-width: 60px; padding: 8px 4px; border-radius: 10px; background: rgba(255,255,255,0.07); border: 0.5px solid var(--border); color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s, color .15s; text-align: center; }
+.step-btn:active { background: rgba(77,159,255,0.2); color: var(--blue); }
+
+/* ── INGRESO CHIPS ── */
+.concepto-chips { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.concepto-chip { padding: 7px 14px; border-radius: 20px; background: var(--card); border: 0.5px solid var(--border); font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; font-family: inherit; flex-shrink: 0; transition: all .15s; }
+.concepto-chip.active { background: rgba(50,215,75,0.18); color: var(--green); border-color: rgba(50,215,75,0.4); }
 </style>
 </head>
 <body>
+
+<!-- LOGIN -->
+<div id="login-screen" style="display:none">
+  <div style="font-size:48px;margin-bottom:16px">💰</div>
+  <h1>Mis Finanzas</h1>
+  <p>Ingresá con tu cuenta para acceder</p>
+  <div class="login-field"><input type="email" id="login-email" placeholder="Email" inputmode="email" autocomplete="email"></div>
+  <div class="login-field"><input type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password"></div>
+  <button class="login-btn" onclick="doLogin()">Ingresar</button>
+  <div class="login-err" id="login-err"></div>
+</div>
 
 <!-- HEADER -->
 <div class="header">
@@ -430,6 +459,10 @@ body {
       <div id="neg-hint" style="font-size:12px;color:var(--text2);margin:-5px 0 9px;display:none">Podés ingresar negativo para descontar saldo</div>
       <div class="field">
         <div class="field-label">Concepto</div>
+        <div id="ingreso-quick-concepto" class="concepto-chips" style="display:none">
+          <button class="concepto-chip" onclick="setConceptoIngreso('Venta')">💵 Venta</button>
+          <button class="concepto-chip" onclick="setConceptoIngreso('Liberación MELI')">🛍️ Liberación MELI</button>
+        </div>
         <input type="text" id="f-concepto" placeholder="ej. Carnicería">
       </div>
       <div class="field" id="cat-field">
@@ -705,6 +738,23 @@ body {
   </div>
 </div>
 
+<!-- TOAST -->
+<div id="app-toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-sheet" style="text-align:center">
+    <div class="modal-handle"></div>
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="modal-title" id="confirm-title" style="text-align:center">¿Confirmar?</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="_confirmCancel()">Cancelar</button>
+      <button class="modal-delete" style="flex:1;margin-top:0" onclick="_confirmOk()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
 <!-- Firebase -->
@@ -722,14 +772,20 @@ const firebaseConfig = {
   appId: "1:249017917046:web:198ad17d39b88eae86c957"
 };
 
-const _AU='lafuentefrancisco@hotmail.com.ar';
-const _AP='f1r9a9n2';
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
-setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
+// Set persistence FIRST before any auth operations
+setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
 
+window._doLogin = async function(email, pass) {
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    document.getElementById('login-err').textContent = 'Email o contraseña incorrectos';
+  }
+};
 
 function setSyncStatus(s) {
   const dot = document.getElementById('sync-dot');
@@ -780,19 +836,10 @@ async function loadAll(refs) {
     const cv = parse(c); if (Array.isArray(cv) && cv.length) window._cats = cv;
     if (s.exists()) {
       const sd = s.data();
-      // Read as number directly - Firestore int64 comes as JS Number
-      if (sd.pochiMonto !== undefined && sd.pochiMonto !== null) {
-        const v = Number(sd.pochiMonto);
-        window._pochiMonto = isFinite(v) ? v : 0;
-      }
-      if (sd.enanoMonto !== undefined && sd.enanoMonto !== null) {
-        const v = Number(sd.enanoMonto);
-        window._enanoMonto = isFinite(v) ? v : 0;
-      }
-      if (sd.ahorrosUSD !== undefined && sd.ahorrosUSD !== null) {
-        const v = Number(sd.ahorrosUSD);
-        window._ahorrosUSD = isFinite(v) ? v : 0;
-      }
+      // Use isNaN check instead of || 0 so that actual 0 values are preserved
+      if (sd.pochiMonto !== undefined && sd.pochiMonto !== null) window._pochiMonto = isNaN(parseFloat(sd.pochiMonto)) ? 0 : parseFloat(sd.pochiMonto);
+      if (sd.enanoMonto !== undefined && sd.enanoMonto !== null) window._enanoMonto = isNaN(parseFloat(sd.enanoMonto)) ? 0 : parseFloat(sd.enanoMonto);
+      if (sd.ahorrosUSD !== undefined && sd.ahorrosUSD !== null) window._ahorrosUSD = isNaN(parseFloat(sd.ahorrosUSD)) ? 0 : parseFloat(sd.ahorrosUSD);
       if (sd.lastMes) window._lastMes = sd.lastMes;
     }
     const av = parse(a); if (Array.isArray(av)) window._archive = av;
@@ -801,7 +848,8 @@ async function loadAll(refs) {
     const plv = parse(pl); if (Array.isArray(plv)) window._pochiLog = plv;
     setSyncStatus('ok');
   } catch(e) { console.error('Load error', e); setSyncStatus('err'); }
-  // loadAll complete - caller sets _fbReady and calls _initApp
+  // Force render after load regardless of errors
+  if(window._fbReady && typeof window._renderAll === 'function') window._renderAll();
 }
 
 function setupListeners(refs) {
@@ -817,9 +865,9 @@ function setupListeners(refs) {
   onSnapshot(refs.scalars, snap => {
     if (!window._fbReady || !snap.exists()) return;
     const s = snap.data(); let changed = false;
-    if (s.pochiMonto !== undefined && s.pochiMonto !== null) { const v=Number(s.pochiMonto); if(isFinite(v)&&v!==window._pochiMonto){window._pochiMonto=v;changed=true;} }
-    if (s.enanoMonto !== undefined && s.enanoMonto !== null) { const v=Number(s.enanoMonto); if(isFinite(v)&&v!==window._enanoMonto){window._enanoMonto=v;changed=true;} }
-    if (s.ahorrosUSD !== undefined && s.ahorrosUSD !== null) { const v=Number(s.ahorrosUSD); if(isFinite(v)&&v!==window._ahorrosUSD){window._ahorrosUSD=v;changed=true;} }
+    if (s.pochiMonto !== undefined && s.pochiMonto !== null) { const v = isNaN(parseFloat(s.pochiMonto)) ? 0 : parseFloat(s.pochiMonto); if(v !== window._pochiMonto){window._pochiMonto=v;changed=true;} }
+    if (s.enanoMonto !== undefined && s.enanoMonto !== null) { const v = isNaN(parseFloat(s.enanoMonto)) ? 0 : parseFloat(s.enanoMonto); if(v !== window._enanoMonto){window._enanoMonto=v;changed=true;} }
+    if (s.ahorrosUSD !== undefined && s.ahorrosUSD !== null) { const v = isNaN(parseFloat(s.ahorrosUSD)) ? 0 : parseFloat(s.ahorrosUSD); if(v !== window._ahorrosUSD){window._ahorrosUSD=v;changed=true;} }
     if (changed) window._renderAll();
   });
   onSnapshot(refs.enanoLog, snap => { if (!snap.exists()) return; const v = parse(snap); if (Array.isArray(v)) window._enanoLog = v; });
@@ -829,19 +877,24 @@ function setupListeners(refs) {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
+    document.getElementById('login-screen').style.display = 'none';
     window._fbRefs = getRefs(user.uid);
     await loadAll(window._fbRefs);
     setupListeners(window._fbRefs);
     window._fbReady = true;
     window._initApp();
   } else {
-    try {
-      await signInWithEmailAndPassword(auth, _AU, _AP);
-    } catch(e) {
-      document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;padding:32px;text-align:center;color:#fff;background:#00153d"><div style="font-size:48px">⚠️</div><div style="font-size:18px;font-weight:600">Sin conexión</div><div style="font-size:14px;color:rgba(255,255,255,0.6)">Verificá tu internet y volvé a intentar.</div><button onclick="location.reload()" style="margin-top:16px;padding:12px 28px;background:#4D9FFF;border:none;border-radius:12px;color:white;font-size:16px;font-weight:600;cursor:pointer">Reintentar</button></div>';
-    }
+    // Not logged in - show login screen
+    document.getElementById('login-screen').style.display = 'flex';
+    window._fbReady = false;
   }
 });
+// Show login after 3s if Firebase hasn't responded (offline/slow)
+setTimeout(function(){
+  if(!window._fbReady){
+    document.getElementById('login-screen').style.display='flex';
+  }
+}, 3000);
 </script>
 
 <script>
@@ -850,13 +903,13 @@ const CATS_DEFAULT = ['Alimentos','Delfi','Efectivo','Gastos varios FS','Impuest
 const CAT_EMOJIS = {
   Alimentos:'🛒',Salud:'💊',Impuestos:'🏛️',Delfi:'👧',Servicios:'⚡',Transporte:'🚗',Ropa:'👕',Ocio:'🎬',
   Educación:'📚',Vivienda:'🏠',Ingreso:'💰',Otros:'📦',Meli:'🛍️','Tarjeta Pochi':'💳',Efectivo:'💵',
-  'Gastos varios FS':'📋',Suscripciones:'📱',Ajuste:'⚖️',Ahorro:'💰',Ahorros:'💰',Ahorros:'💰'
+  'Gastos varios FS':'📋',Suscripciones:'📱',Ajuste:'⚖️',Ahorro:'💰',Ahorros:'💰'
 };
 const CAT_HEX_MAP = {
   Alimentos:'#32D74B',Salud:'#4D9FFF',Impuestos:'#FF9F0A',Delfi:'#BF5AF2',Servicios:'#5AC8FA',
   Transporte:'#30B0C7',Ocio:'#FF6B6B',Vivienda:'#FF9F0A',Ingreso:'#32D74B',Meli:'#FFD60A',
   'Tarjeta Pochi':'#CF8EF4',Efectivo:'#63E6A0','Gastos varios FS':'#74B9FF',Suscripciones:'#FF7675',
-  Otros:'#8E8E93',Ajuste:'#8E8E93',Ahorro:'#FFD60A',Ahorros:'#FFD60A',Ahorros:'#FFD60A'
+  Otros:'#8E8E93',Ajuste:'#8E8E93',Ahorro:'#FFD60A',Ahorros:'#FFD60A'
 };
 const TIPO_CONFIG = {
   gasto:     {emoji:'💸',color:'rgba(255,69,58,0.2)',  cls:'active-gasto',    label:'Nuevo gasto'},
@@ -894,20 +947,17 @@ function autoColor(cat,idx) { if(CAT_HEX_MAP[cat]) return CAT_HEX_MAP[cat]; cons
 
 // ── SAVE ──
 function _safeSave(key, value) {
-  if (typeof window._fbSave === 'function') {
-    window._fbSave(key, value);
-  } else {
-    setTimeout(function() { _safeSave(key, value); }, 300);
-  }
+  if (!window._fbReady) return; // No guardar antes de que carguen los datos reales
+  if (typeof window._fbSave === 'function') window._fbSave(key, value);
 }
 function saveData()      { _safeSave('data', window._data); }
 function savePend()      { _safeSave('pend', window._pend); }
 function saveCats()      { _safeSave('cats', window._cats); }
 function saveScalars() {
   _safeSave('scalars', {
-    pochiMonto: Number(window._pochiMonto) || 0,
-    enanoMonto: Number(window._enanoMonto) || 0,
-    ahorrosUSD: Number(window._ahorrosUSD) || 0,
+    pochiMonto: typeof window._pochiMonto === 'number' ? window._pochiMonto : 0,
+    enanoMonto: typeof window._enanoMonto === 'number' ? window._enanoMonto : 0,
+    ahorrosUSD: typeof window._ahorrosUSD === 'number' ? window._ahorrosUSD : 0,
     lastMes: window._lastMes || null
   });
 }
@@ -915,7 +965,66 @@ function saveArchive()   { _safeSave('archive', window._archive); }
 function saveEnanoLog()  { _safeSave('enanoLog', window._enanoLog); }
 function saveAhorrosLog(){ _safeSave('ahorrosLog', window._ahorrosLog); }
 
-// auto-login
+// ── TOAST ──
+function showToast(msg, duration) {
+  var t = document.getElementById('app-toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(function(){ t.classList.remove('show'); }, duration || 3500);
+}
+
+// ── CONFIRM MODAL ──
+var _confirmCallback = null;
+function showConfirm(msg, onOk, icon) {
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-icon').textContent = icon || '🗑️';
+  _confirmCallback = onOk;
+  document.getElementById('modal-confirm').classList.add('visible');
+}
+function _confirmOk() {
+  document.getElementById('modal-confirm').classList.remove('visible');
+  if (_confirmCallback) { var cb = _confirmCallback; _confirmCallback = null; cb(); }
+}
+function _confirmCancel() {
+  document.getElementById('modal-confirm').classList.remove('visible');
+  _confirmCallback = null;
+}
+
+// ── STEPPER AJUSTE ──
+function stepAjuste(delta) {
+  var input = document.getElementById('ajuste-saldo-deseado');
+  var current = parseFloat(input.value);
+  if (isNaN(current)) current = calcSaldoActual();
+  input.value = current + delta;
+  input.dispatchEvent(new Event('input'));
+}
+
+// ── CONCEPTO INGRESO ──
+function setConceptoIngreso(val) {
+  document.getElementById('f-concepto').value = val;
+  document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){
+    b.classList.toggle('active', b.textContent.trim().indexOf(val) !== -1);
+  });
+}
+
+// ── LOGIN ──
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if (!email||!pass) { document.getElementById('login-err').textContent='Completá email y contraseña'; return; }
+  document.getElementById('login-err').textContent='Conectando...';
+  if (typeof window._doLogin === 'function') {
+    window._doLogin(email, pass);
+  } else {
+    setTimeout(function() {
+      if (typeof window._doLogin === 'function') {
+        window._doLogin(email, pass);
+      } else {
+        document.getElementById('login-err').textContent='Error de conexión. Recargá la página.';
+      }
+    }, 2000);
+  }
+}
 
 // ── UNDO/REDO ──
 let _undoStack=[], _redoStack=[];
@@ -966,7 +1075,7 @@ function cerrarMes() {
   window._lastMes=nowYM();
   saveScalars();
   document.getElementById('cierre-banner').style.display='none';
-  alert('✓ Mes '+mesNombre+' cerrado. Los pendientes, Pochi, Enano y Ahorros se mantienen.');
+  showToast('✓ Mes '+mesNombre+' cerrado. Pendientes y cuentas se mantienen.');
   renderInicio();
 }
 
@@ -1125,8 +1234,8 @@ function guardarAhorro() {
 function abrirAjusteSaldo() {
   const saldoActual=calcSaldoActual();
   document.getElementById('ajuste-saldo-actual').value=fmt(saldoActual);
-  document.getElementById('ajuste-saldo-deseado').value='';
-  document.getElementById('ajuste-preview').textContent='';
+  document.getElementById('ajuste-saldo-deseado').value=saldoActual; // pre-cargado para editar directo
+  document.getElementById('ajuste-preview').textContent='Sin cambios';
   document.getElementById('ajuste-concepto').value='Ajuste manual';
   document.getElementById('modal-ajuste').classList.add('visible');
   document.getElementById('ajuste-saldo-deseado').oninput=function(){
@@ -1243,13 +1352,14 @@ function renderDetalleList() {
 function eliminarPochiLog(id){
   var l=(window._pochiLog||[]).find(function(e){return e.id===id;});
   if(!l)return;
-  if(!confirm('¿Revertir este movimiento de Pochi?'))return;
-  pushUndo(snapshotState());
-  window._pochiMonto-=l.monto;
-  if(l.dataId){window._data=window._data.filter(function(d){return d.id!==l.dataId;});saveData();}
-  window._pochiLog=window._pochiLog.filter(function(e){return e.id!==id;});
-  saveScalars();_safeSave('pochiLog',window._pochiLog);
-  renderDetalleList();window._renderAll();
+  showConfirm('¿Revertir este movimiento de Pochi?', function(){
+    pushUndo(snapshotState());
+    window._pochiMonto-=l.monto;
+    if(l.dataId){window._data=window._data.filter(function(d){return d.id!==l.dataId;});saveData();}
+    window._pochiLog=window._pochiLog.filter(function(e){return e.id!==id;});
+    saveScalars();_safeSave('pochiLog',window._pochiLog);
+    renderDetalleList();window._renderAll();
+  });
 }
 
 // ── EDITAR/ELIMINAR ENANO LOG ──
@@ -1276,20 +1386,26 @@ function guardarEdicionEnano() {
   saveScalars(); saveEnanoLog();
   cerrarModalEditarEnano(); renderDetalleList(); window._renderAll();
 }
-function eliminarDesdeEdicionEnano() {
-  if(!_editEnanoLogId) return;
-  if(!confirm('¿Eliminar este movimiento?')) return;
-  eliminarEnanoLog(_editEnanoLogId);
-  cerrarModalEditarEnano();
-}
-function eliminarEnanoLog(id) {
+function _doEliminarEnanoLog(id) {
   const l=window._enanoLog.find(e=>e.id===id); if(!l) return;
-  if(!confirm('¿Revertir este movimiento de Deuda Enano?')) return;
   pushUndo(snapshotState());
   window._enanoMonto-=l.deltaEnano;
   if(l.dataId) { window._data=window._data.filter(d=>d.id!==l.dataId); saveData(); }
   window._enanoLog=window._enanoLog.filter(e=>e.id!==id);
   saveScalars(); saveEnanoLog(); renderDetalleList(); window._renderAll();
+}
+function eliminarDesdeEdicionEnano() {
+  if(!_editEnanoLogId) return;
+  showConfirm('¿Eliminar este movimiento?', function(){
+    _doEliminarEnanoLog(_editEnanoLogId);
+    cerrarModalEditarEnano();
+  });
+}
+function eliminarEnanoLog(id) {
+  const l=window._enanoLog.find(e=>e.id===id); if(!l) return;
+  showConfirm('¿Revertir este movimiento de Deuda Enano?', function(){
+    _doEliminarEnanoLog(id);
+  });
 }
 
 // ── EDITAR/ELIMINAR AHORRO LOG ──
@@ -1316,19 +1432,25 @@ function guardarEdicionAhorro() {
   saveScalars(); saveAhorrosLog();
   cerrarModalEditarAhorro(); renderDetalleList(); window._renderAll();
 }
-function eliminarDesdeEdicionAhorro() {
-  if(!_editAhorroLogId) return;
-  if(!confirm('¿Eliminar este movimiento?')) return;
-  eliminarAhorroLog(_editAhorroLogId);
-  cerrarModalEditarAhorro();
-}
-function eliminarAhorroLog(id) {
+function _doEliminarAhorroLog(id) {
   const l=window._ahorrosLog.find(e=>e.id===id); if(!l) return;
-  if(!confirm('¿Revertir este movimiento de Ahorros?')) return;
   pushUndo(snapshotState());
   window._ahorrosUSD-=l.delta;
   window._ahorrosLog=window._ahorrosLog.filter(e=>e.id!==id);
   saveScalars(); saveAhorrosLog(); renderDetalleList(); window._renderAll();
+}
+function eliminarDesdeEdicionAhorro() {
+  if(!_editAhorroLogId) return;
+  showConfirm('¿Eliminar este movimiento?', function(){
+    _doEliminarAhorroLog(_editAhorroLogId);
+    cerrarModalEditarAhorro();
+  });
+}
+function eliminarAhorroLog(id) {
+  const l=window._ahorrosLog.find(e=>e.id===id); if(!l) return;
+  showConfirm('¿Revertir este movimiento de Ahorros?', function(){
+    _doEliminarAhorroLog(id);
+  });
 }
 
 // ── NAVIGATION ──
@@ -1378,9 +1500,12 @@ function setTipo(t) {
   if(['gasto','ingreso','pendiente'].includes(t)){
     document.getElementById('cat-field').style.display=t==='ingreso'?'none':'';
     document.getElementById('neg-hint').style.display=t==='ingreso'?'block':'none';
+    document.getElementById('ingreso-quick-concepto').style.display=t==='ingreso'?'flex':'none';
     if(t==='ingreso'){
       var fc=document.getElementById('f-concepto');
-      if(!fc.value||fc.value==='')fc.value='Venta';
+      if(!fc.value||fc.value==='') { fc.value='Venta'; setConceptoIngreso('Venta'); }
+    } else {
+      document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active');});
     }
   }
 }
@@ -1413,13 +1538,13 @@ function guardar() {
   }
   msg.style.color='var(--green)'; msg.textContent='✓ Guardado';
   document.getElementById('f-monto').value=''; document.getElementById('f-concepto').value='';
+  document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active');});
   setTimeout(()=>{msg.textContent='';},2000);
   window._renderAll();
 }
 
 // ── DELETE ──
-function deleteEntry(id) {
-  if(!confirm('¿Eliminar este registro?')) return;
+function _doEliminarEntry(id) {
   pushUndo(snapshotState());
   const entry=window._data.find(d=>d.id===id);
   if(entry&&entry._enanoReg){
@@ -1428,21 +1553,29 @@ function deleteEntry(id) {
   }
   window._data=window._data.filter(d=>d.id!==id); saveData(); window._renderAll();
 }
+function deleteEntry(id) {
+  showConfirm('¿Eliminar este registro?', function(){ _doEliminarEntry(id); });
+}
 function deletePend(id) {
-  if(!confirm('¿Eliminar este pendiente?')) return;
-  pushUndo(snapshotState());
-  window._pend=window._pend.filter(p=>p.id!==id); savePend(); window._renderAll();
+  showConfirm('¿Eliminar este pendiente?', function(){
+    pushUndo(snapshotState());
+    window._pend=window._pend.filter(p=>p.id!==id); savePend(); window._renderAll();
+  });
 }
 
 // ── PENDIENTE PAGO ──
 function pagarPendiente(id) {
   const p=window._pend.find(p=>p.id===id); if(!p) return;
-  pushUndo(snapshotState());
-  if(p.pagado){p.pagado=false;window._data=window._data.filter(d=>!(d._pendId===id));saveData();savePend();window._renderAll();return;}
-  if(!confirm('¿Marcar "'+p.concepto+'" como pagado? Se registrará como gasto.')) return;
-  p.pagado=true;
-  window._data.push({id:nextId(window._data),tipo:'gasto',fecha:nowYMD(),concepto:p.concepto+' (pagado)',cat:p.cat,monto:p.monto,_pendId:id});
-  savePend(); saveData(); window._renderAll();
+  if(p.pagado){
+    pushUndo(snapshotState());
+    p.pagado=false;window._data=window._data.filter(d=>!(d._pendId===id));saveData();savePend();window._renderAll();return;
+  }
+  showConfirm('¿Marcar "'+p.concepto+'" como pagado?\nSe registrará como gasto.', function(){
+    pushUndo(snapshotState());
+    p.pagado=true;
+    window._data.push({id:nextId(window._data),tipo:'gasto',fecha:nowYMD(),concepto:p.concepto+' (pagado)',cat:p.cat,monto:p.monto,_pendId:id});
+    savePend(); saveData(); window._renderAll();
+  }, '✅');
 }
 
 // ── PENDIENTES ──
@@ -1539,12 +1672,10 @@ function guardarEdicion(){
 }
 function eliminarDesdeEdicion(){
   if(!_editId)return;
-  if(!confirm('¿Eliminar este registro?'))return;
-  pushUndo(snapshotState());
-  const e=window._data.find(d=>d.id===_editId);
-  if(e&&e._enanoReg){const l=window._enanoLog.find(x=>x.dataId===e.id);if(l){window._enanoMonto-=l.deltaEnano;window._enanoLog=window._enanoLog.filter(x=>x.id!==l.id);saveScalars();saveEnanoLog();}}
-  window._data=window._data.filter(d=>d.id!==_editId);
-  saveData();cerrarModalEditar();window._renderAll();
+  showConfirm('¿Eliminar este registro?', function(){
+    _doEliminarEntry(_editId);
+    cerrarModalEditar();
+  });
 }
 
 // ── RENDER INICIO ──
@@ -1790,7 +1921,11 @@ history.pushState(null, '', location.href);
 // ── SWIPE BACK ──
 (function(){
   var startX=0, startY=0;
-  document.addEventListener('touchstart',function(e){startX=e.touches[0].clientX;startY=e.touches[0].clientY;},{passive:true});
+  // Non-passive para poder preventDefault en borde izquierdo (fix iOS back gesture)
+  document.addEventListener('touchstart',function(e){
+    startX=e.touches[0].clientX; startY=e.touches[0].clientY;
+    if(startX < 22) e.preventDefault(); // Bloquea el swipe-back nativo de iOS Safari
+  },{passive:false});
   document.addEventListener('touchend',function(e){
     var dx=e.changedTouches[0].clientX-startX;
     var dy=Math.abs(e.changedTouches[0].clientY-startY);
@@ -1799,13 +1934,16 @@ history.pushState(null, '', location.href);
       var navItems=document.querySelectorAll('.nav-item');
       if(!active) return;
       var id=active.id;
-      if(id==='panel-detalle'){switchPanel('inicio',navItems[0]);}
-      else if(id==='panel-movimientos'){switchPanel('inicio',navItems[0]);}
-      else if(id==='panel-cargar'){switchPanel('inicio',navItems[0]);}
-      else if(id==='panel-pendientes'){switchPanel('inicio',navItems[0]);}
-      else if(id==='panel-resumen'){switchPanel('inicio',navItems[0]);}
+      if(id!=='panel-inicio') switchPanel('inicio',navItems[0]);
     }
   },{passive:true});
+  // Fix pantalla blanca al volver desde bfcache (iOS)
+  window.addEventListener('pageshow',function(e){
+    if(e.persisted){
+      history.pushState(null,'',location.href);
+      document.getElementById('login-screen').style.display='none';
+    }
+  });
 })();
 
 // ── INIT ──
@@ -1819,7 +1957,9 @@ window._initApp=function(){
 // Only show login if Firebase hasn't connected after 6s (offline scenario)
 setTimeout(()=>{
   if(!window._fbReady){
-    }
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('login-err').textContent='Sin conexión. Verificá internet.';
+  }
 },6000);
 </script>
 
