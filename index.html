@@ -147,19 +147,25 @@ body {
 .nav-label { font-size: 10px; font-weight: 500; letter-spacing: .2px; }
 .nav-svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .fab {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: linear-gradient(145deg, #5eaeff, #2d80f0);
+  width: 66px; height: 66px; border-radius: 50%;
+  background: linear-gradient(145deg, #6ab8ff, #2372e0);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 24px rgba(77,159,255,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
-  transition: transform .12s, box-shadow .12s; margin-top: -10px;
+  box-shadow: 0 6px 28px rgba(77,159,255,0.65), 0 2px 8px rgba(0,0,0,0.4), inset 0 1.5px 0 rgba(255,255,255,0.3);
+  transition: transform .15s cubic-bezier(0.34,1.56,0.64,1), box-shadow .15s; margin-top: -22px;
+  flex-shrink: 0;
 }
-.fab:active { transform: scale(0.91); box-shadow: 0 2px 12px rgba(77,159,255,0.35); }
+.fab:active { transform: scale(0.88); box-shadow: 0 2px 12px rgba(77,159,255,0.35); }
 
 /* ── PANELS ── */
 .panel { display: none; padding: 0 0 16px; }
-.panel.active { display: block; animation: fadeIn .32s cubic-bezier(0.34,1.56,0.64,1); }
-@keyframes fadeIn { from { opacity:0; transform:translateY(14px) scale(0.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+.panel.active { display: block; }
+.panel.slide-from-right { animation: slideFromRight .36s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+.panel.slide-from-left  { animation: slideFromLeft  .36s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+.panel.slide-from-up    { animation: slideFromUp    .32s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+@keyframes slideFromRight { from { opacity:0.5; transform:translateX(52px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideFromLeft  { from { opacity:0.5; transform:translateX(-52px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideFromUp    { from { opacity:0; transform:translateY(18px) scale(0.982); } to { opacity:1; transform:translateY(0) scale(1); } }
 @keyframes sheetUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
 
 /* ── SCROLL SUAVE ── */
@@ -918,7 +924,7 @@ body {
     <span class="nav-label">Movimientos</span>
   </button>
   <button class="fab" onclick="switchPanel('cargar',null)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="26" height="26"><path d="M12 4v16M4 12h16"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" width="32" height="32"><path d="M12 4v16M4 12h16"/></svg>
   </button>
   <button class="nav-item" onclick="switchPanel('pendientes',this)">
     <span class="nav-icon"><svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
@@ -1802,33 +1808,80 @@ function eliminarAhorroLog(id) {
 }
 
 // ── NAVIGATION ──
-function switchPanel(name, btn) {
+var PANEL_ORDER = ['inicio','movimientos','pendientes','resumen'];
+
+function _animatePanel(el, cls) {
+  el.classList.remove('slide-from-right','slide-from-left','slide-from-up');
+  void el.offsetWidth;
+  el.classList.add(cls);
+  el.addEventListener('animationend', function h(){ el.classList.remove(cls); el.removeEventListener('animationend',h); }, {once:true});
+}
+
+function switchPanel(name, btn, dir) {
   var prev = document.querySelector('.panel.active');
   var next = document.getElementById('panel-'+name);
-  if(prev && prev !== next) {
-    // Render next panel content BEFORE showing it to avoid flash
-    if(name==='inicio') renderInicio();
-    if(name==='movimientos') renderMovimientos();
-    if(name==='pendientes') renderPendientesTab();
-    if(name==='resumen') renderResumen();
-    if(name==='cargar') {
-      document.getElementById('f-concepto').value = '';
-      document.getElementById('f-monto').value = '';
-      var fmsg = document.getElementById('form-msg');
-      if(fmsg) fmsg.textContent = '';
-    }
-    prev.classList.remove('active');
-    next.classList.add('active');
-  } else if(!prev) {
-    if(name==='inicio') renderInicio();
-    if(name==='movimientos') renderMovimientos();
-    if(name==='pendientes') renderPendientesTab();
-    if(name==='resumen') renderResumen();
-    next.classList.add('active');
+  if (!next) return;
+  if (prev && prev === next) return;
+
+  // Determine slide direction from panel order
+  if (!dir && prev) {
+    var prevName = prev.id.replace('panel-','');
+    var pi = PANEL_ORDER.indexOf(prevName);
+    var ni = PANEL_ORDER.indexOf(name);
+    if (pi !== -1 && ni !== -1) dir = ni > pi ? 'right' : 'left';
+    else dir = 'up';
   }
+
+  // Render content before showing
+  if(name==='inicio') renderInicio();
+  if(name==='movimientos') renderMovimientos();
+  if(name==='pendientes') renderPendientesTab();
+  if(name==='resumen') renderResumen();
+  if(name==='cargar') {
+    document.getElementById('f-concepto').value = '';
+    document.getElementById('f-monto').value = '';
+    var fmsg = document.getElementById('form-msg');
+    if(fmsg) fmsg.textContent = '';
+  }
+
+  if(prev) prev.classList.remove('active');
+  next.classList.add('active');
+
+  // Animate incoming panel
+  var animCls = dir==='right' ? 'slide-from-right' : dir==='left' ? 'slide-from-left' : 'slide-from-up';
+  _animatePanel(next, animCls);
+
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   if(btn&&btn.classList&&btn.classList.contains('nav-item')) btn.classList.add('active');
 }
+
+// ── SWIPE NAVIGATION ──
+(function(){
+  var startX=0, startY=0, locked=false;
+  document.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    locked = false;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(locked) return;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.4) return;
+    var active = document.querySelector('.panel.active');
+    if(!active) return;
+    var cur = active.id.replace('panel-','');
+    var idx = PANEL_ORDER.indexOf(cur);
+    if(idx === -1) return;
+    locked = true;
+    var navItems = document.querySelectorAll('.nav-item');
+    if(dx < 0 && idx < PANEL_ORDER.length-1) {
+      switchPanel(PANEL_ORDER[idx+1], navItems[idx+1], 'right');
+    } else if(dx > 0 && idx > 0) {
+      switchPanel(PANEL_ORDER[idx-1], navItems[idx-1], 'left');
+    }
+  }, {passive:true});
+})();
 function irMovFiltrado(f) {
   switchPanel('movimientos', document.querySelectorAll('.nav-item')[1]);
   activeFilter=f; activeCatFilter=null;
