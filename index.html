@@ -119,40 +119,40 @@ body {
 
 /* ── BOTTOM NAV ── */
 .nav {
-  position: fixed; bottom: calc(14px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
-  width: calc(100% - 40px); max-width: 390px;
-  background: rgba(10,12,28,0.72);
+  position: fixed; bottom: calc(16px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
+  width: calc(100% - 48px); max-width: 380px;
+  background: rgba(10,12,28,0.75);
   backdrop-filter: saturate(220%) blur(40px); -webkit-backdrop-filter: saturate(220%) blur(40px);
   border: 0.5px solid rgba(255,255,255,0.13);
-  border-radius: 28px;
+  border-radius: 26px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1);
   display: flex; justify-content: space-around; align-items: center;
-  padding: 8px 0 8px; z-index: 200;
+  padding: 5px 0 5px; z-index: 200;
   overflow: visible;
 }
 .nav-item {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  cursor: pointer; padding: 4px 10px; border: none; background: none;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  cursor: pointer; padding: 3px 10px; border: none; background: none;
   font-family: inherit; color: var(--text2);
-  transition: color .2s ease, transform .1s ease; min-width: 54px;
+  transition: color .2s ease, transform .1s ease; min-width: 52px;
   position: relative;
 }
 .nav-item:active { transform: scale(0.88); }
 .nav-item.active { color: var(--blue); }
 .nav-item.active::before {
-  content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-  width: 22px; height: 3px; border-radius: 3px;
+  content: ''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+  width: 20px; height: 2.5px; border-radius: 3px;
   background: var(--blue); box-shadow: 0 0 8px rgba(77,159,255,0.7);
 }
-.nav-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; height: 24px; }
-.nav-label { font-size: 10px; font-weight: 500; letter-spacing: .2px; }
-.nav-svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nav-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; height: 22px; }
+.nav-label { font-size: 9px; font-weight: 500; letter-spacing: .2px; margin-top: 2px; }
+.nav-svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .fab {
-  width: 70px; height: 70px; border-radius: 50%;
+  width: 58px; height: 58px; border-radius: 50%;
   background: linear-gradient(145deg, #6ab8ff, #2372e0);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 28px rgba(77,159,255,0.65), 0 2px 8px rgba(0,0,0,0.4), inset 0 1.5px 0 rgba(255,255,255,0.3);
+  box-shadow: 0 6px 24px rgba(77,159,255,0.65), 0 2px 8px rgba(0,0,0,0.4), inset 0 1.5px 0 rgba(255,255,255,0.3);
   transition: transform .15s cubic-bezier(0.34,1.56,0.64,1), box-shadow .15s;
   flex-shrink: 0; margin-top: 0;
 }
@@ -933,7 +933,7 @@ body {
     <span class="nav-label">Movimientos</span>
   </button>
   <button class="fab" onclick="switchPanel('cargar',null)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" width="32" height="32"><path d="M12 4v16M4 12h16"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" width="28" height="28"><path d="M12 4v16M4 12h16"/></svg>
   </button>
   <button class="nav-item" onclick="switchPanel('pendientes',this)">
     <span class="nav-icon"><svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
