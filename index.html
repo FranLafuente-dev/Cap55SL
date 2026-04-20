@@ -24,10 +24,10 @@
   --purple: #BF5AF2; --teal: #5AC8FA; --gold: #FFD60A;
   --r: 18px; --rl: 24px;
   --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --glass: rgba(255,255,255,0.07);
-  --glass-border: rgba(255,255,255,0.12);
-  --glass-blur: blur(24px) saturate(180%);
-  --shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+  --glass: rgba(255,255,255,0.045);
+  --glass-border: rgba(255,255,255,0.10);
+  --glass-blur: blur(28px) saturate(200%);
+  --shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 html { background: var(--bg); }
 body {
@@ -39,7 +39,7 @@ body {
   background-attachment: fixed;
   color: var(--text); min-height: 100vh;
   max-width: 430px; margin: 0 auto; position: relative;
-  padding-bottom: calc(90px + var(--safe-bottom)); -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(110px + var(--safe-bottom)); -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
@@ -119,13 +119,15 @@ body {
 
 /* ── BOTTOM NAV ── */
 .nav {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: 430px;
-  background: rgba(6,8,22,0.82);
-  backdrop-filter: saturate(200%) blur(40px); -webkit-backdrop-filter: saturate(200%) blur(40px);
-  border-top: 0.5px solid rgba(255,255,255,0.09);
+  position: fixed; bottom: calc(14px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
+  width: calc(100% - 40px); max-width: 390px;
+  background: rgba(10,12,28,0.72);
+  backdrop-filter: saturate(220%) blur(40px); -webkit-backdrop-filter: saturate(220%) blur(40px);
+  border: 0.5px solid rgba(255,255,255,0.13);
+  border-radius: 28px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1);
   display: flex; justify-content: space-around; align-items: center;
-  padding: 10px 0 calc(18px + var(--safe-bottom)); z-index: 200;
+  padding: 10px 0 10px; z-index: 200;
 }
 .nav-item {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -137,9 +139,9 @@ body {
 .nav-item:active { transform: scale(0.88); }
 .nav-item.active { color: var(--blue); }
 .nav-item.active::before {
-  content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-  width: 32px; height: 3px; border-radius: 0 0 3px 3px;
-  background: var(--blue); box-shadow: 0 0 10px rgba(77,159,255,0.6);
+  content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+  width: 22px; height: 3px; border-radius: 3px;
+  background: var(--blue); box-shadow: 0 0 8px rgba(77,159,255,0.7);
 }
 .nav-icon { font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; height: 24px; }
 .nav-label { font-size: 10px; font-weight: 500; letter-spacing: .2px; }
@@ -156,8 +158,8 @@ body {
 
 /* ── PANELS ── */
 .panel { display: none; padding: 0 0 16px; }
-.panel.active { display: block; animation: fadeIn .22s cubic-bezier(0.4,0,0.2,1); }
-@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.panel.active { display: block; animation: fadeIn .32s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes fadeIn { from { opacity:0; transform:translateY(14px) scale(0.985); } to { opacity:1; transform:translateY(0) scale(1); } }
 @keyframes sheetUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
 
 /* ── SCROLL SUAVE ── */
@@ -1809,6 +1811,12 @@ function switchPanel(name, btn) {
     if(name==='movimientos') renderMovimientos();
     if(name==='pendientes') renderPendientesTab();
     if(name==='resumen') renderResumen();
+    if(name==='cargar') {
+      document.getElementById('f-concepto').value = '';
+      document.getElementById('f-monto').value = '';
+      var fmsg = document.getElementById('form-msg');
+      if(fmsg) fmsg.textContent = '';
+    }
     prev.classList.remove('active');
     next.classList.add('active');
   } else if(!prev) {
@@ -1852,6 +1860,7 @@ function setTipo(t) {
       if(!fc.value||fc.value==='') { setConceptoIngreso('Venta'); }
     } else {
       document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active','active-sueldo');});
+      document.getElementById('f-concepto').value = '';
     }
   }
 }
