@@ -761,7 +761,7 @@ body {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCVlW4tvjTPrZ48_PM4sirT1uRTOP5THKI",
@@ -774,7 +774,9 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
-const db = getFirestore(fbApp);
+let db;
+try { db = initializeFirestore(fbApp, { localCache: persistentLocalCache() }); }
+catch(e) { const {getFirestore:gf} = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"); db = gf(fbApp); }
 
 // Set persistence FIRST before any auth operations
 setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
@@ -847,6 +849,7 @@ async function loadAll(refs) {
     const alv = parse(al); if (Array.isArray(alv)) window._ahorrosLog = alv;
     const plv = parse(pl); if (Array.isArray(plv)) window._pochiLog = plv;
     setSyncStatus('ok');
+    if(typeof window._saveAllToCache==='function') window._saveAllToCache();
   } catch(e) { console.error('Load error', e); setSyncStatus('err'); }
   // Force render after load regardless of errors
   if(window._fbReady && typeof window._renderAll === 'function') window._renderAll();
@@ -877,24 +880,28 @@ function setupListeners(refs) {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
+    localStorage.setItem('mf_had_auth','true');
     document.getElementById('login-screen').style.display = 'none';
     window._fbRefs = getRefs(user.uid);
     await loadAll(window._fbRefs);
     setupListeners(window._fbRefs);
     window._fbReady = true;
-    window._initApp();
+    if (!window._appInited) { window._initApp(); window._appInited = true; }
+    else if (typeof window._renderAll === 'function') window._renderAll();
   } else {
-    // Not logged in - show login screen
-    document.getElementById('login-screen').style.display = 'flex';
     window._fbReady = false;
+    // Solo mostrar login si la app no está ya corriendo con datos de cache
+    if (!window._appInited) {
+      document.getElementById('login-screen').style.display = 'flex';
+    }
   }
 });
-// Show login after 3s if Firebase hasn't responded (offline/slow)
+// Mostrar login SOLO si nunca se autenticó en este dispositivo
 setTimeout(function(){
-  if(!window._fbReady){
+  if(!window._fbReady && !window._appInited){
     document.getElementById('login-screen').style.display='flex';
   }
-}, 3000);
+}, 5000);
 </script>
 
 <script>
@@ -945,10 +952,36 @@ function nextId(arr) { return arr.length?Math.max(...arr.map(x=>x.id))+1:1; }
 function catEmoji(cat) { return CAT_EMOJIS[cat]||'📦'; }
 function autoColor(cat,idx) { if(CAT_HEX_MAP[cat]) return CAT_HEX_MAP[cat]; const p=['#FF6B6B','#FFA500','#FFE66D','#4ECDC4','#45B7D1','#96E6A1','#DDA0DD','#F08080']; return p[idx%p.length]; }
 
+// ── LOCALSTORAGE CACHE (soporte offline) ──
+function _lsSave(k,v){try{localStorage.setItem('mf_'+k,JSON.stringify(v));}catch(e){}}
+function _lsLoad(k,d){try{var v=JSON.parse(localStorage.getItem('mf_'+k));return(v!==null&&v!==undefined)?v:d;}catch(e){return d;}}
+function _loadFromCache(){
+  var d=_lsLoad('data',null);if(Array.isArray(d))window._data=d;
+  var p=_lsLoad('pend',null);if(Array.isArray(p))window._pend=p;
+  var c=_lsLoad('cats',null);if(Array.isArray(c)&&c.length)window._cats=c;
+  var s=_lsLoad('scalars',null);
+  if(s){
+    if(s.pochiMonto!==undefined)window._pochiMonto=parseFloat(s.pochiMonto)||0;
+    if(s.enanoMonto!==undefined)window._enanoMonto=parseFloat(s.enanoMonto)||0;
+    if(s.ahorrosUSD!==undefined)window._ahorrosUSD=parseFloat(s.ahorrosUSD)||0;
+    if(s.lastMes)window._lastMes=s.lastMes;
+  }
+  var a=_lsLoad('archive',null);if(Array.isArray(a))window._archive=a;
+  var el=_lsLoad('enanoLog',null);if(Array.isArray(el))window._enanoLog=el;
+  var al=_lsLoad('ahorrosLog',null);if(Array.isArray(al))window._ahorrosLog=al;
+  var pl=_lsLoad('pochiLog',null);if(Array.isArray(pl))window._pochiLog=pl;
+}
+window._saveAllToCache=function(){
+  _lsSave('data',window._data);_lsSave('pend',window._pend);_lsSave('cats',window._cats);
+  _lsSave('scalars',{pochiMonto:window._pochiMonto,enanoMonto:window._enanoMonto,ahorrosUSD:window._ahorrosUSD,lastMes:window._lastMes});
+  _lsSave('archive',window._archive);_lsSave('enanoLog',window._enanoLog);
+  _lsSave('ahorrosLog',window._ahorrosLog);_lsSave('pochiLog',window._pochiLog);
+};
+
 // ── SAVE ──
 function _safeSave(key, value) {
-  if (!window._fbReady) return; // No guardar antes de que carguen los datos reales
-  if (typeof window._fbSave === 'function') window._fbSave(key, value);
+  _lsSave(key, value); // Siempre guardar localmente (funciona offline)
+  if (window._fbReady && typeof window._fbSave === 'function') window._fbSave(key, value);
 }
 function saveData()      { _safeSave('data', window._data); }
 function savePend()      { _safeSave('pend', window._pend); }
@@ -1954,13 +1987,32 @@ window._initApp=function(){
   renderInicio();
 };
 
-// Only show login if Firebase hasn't connected after 6s (offline scenario)
+// ── STARTUP: si ya estuvo autenticado, arrancar con datos de cache ──
+window._hadAuth = localStorage.getItem('mf_had_auth')==='true';
+window._appInited = false;
+if(window._hadAuth){
+  _loadFromCache();
+  window._initApp();
+  window._appInited = true;
+}
+
+// Mostrar login solo si NUNCA se autenticó en este dispositivo y Firebase no conecta
 setTimeout(()=>{
-  if(!window._fbReady){
+  if(!window._fbReady && !window._appInited){
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('login-err').textContent='Sin conexión. Verificá internet.';
   }
-},6000);
+},8000);
+
+// Indicador visual de conectividad
+window.addEventListener('online',function(){
+  var d=document.getElementById('sync-dot');
+  if(d&&!window._fbReady)d.className='sync-dot syncing';
+});
+window.addEventListener('offline',function(){
+  var d=document.getElementById('sync-dot');
+  if(d)d.className='sync-dot err';
+});
 </script>
 
 <script>
@@ -1971,7 +2023,32 @@ window.addEventListener('beforeinstallprompt',function(e){
 });
 
 if('serviceWorker' in navigator){
-  const swCode=`self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>new Response('',{status:408})));});`;
+  const swCode=`
+const CACHE='mf-v2';
+const PRECACHE=[
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
+];
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(PRECACHE).catch(()=>{})));
+  self.skipWaiting();
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  e.respondWith(
+    caches.match(e.request).then(cached=>{
+      const net=fetch(e.request).then(r=>{
+        if(r&&r.ok){const cl=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cl));}
+        return r;
+      }).catch(()=>cached||new Response('',{status:408}));
+      return cached||net;
+    })
+  );
+});`;
   const blob=new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
