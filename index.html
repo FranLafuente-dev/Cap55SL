@@ -156,9 +156,19 @@ body {
 
 /* ── PANELS ── */
 .panel { display: none; padding: 0 0 16px; }
-.panel.active { display: block; animation: fadeIn .18s ease; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-@keyframes sheetUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+.panel.active { display: block; animation: fadeIn .22s cubic-bezier(0.4,0,0.2,1); }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes sheetUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
+
+/* ── SCROLL SUAVE ── */
+* { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+
+/* ── INTERACCIÓN TÁCTIL ── */
+.card, .secondary-card, .hero, .deficit-chip, .pend-dash-simple, .res-stat {
+  transition: transform .12s cubic-bezier(0.4,0,0.2,1), box-shadow .12s;
+}
+.card:active, .secondary-card:active { transform: scale(0.992); }
+.hero:active { transform: scale(0.995); }
 
 /* ── CARDS ── */
 .card {
@@ -537,15 +547,28 @@ body {
 }
 .step-btn:active { background: rgba(77,159,255,0.2); color: var(--blue); }
 
-/* ── INGRESO CHIPS ── */
-.concepto-chips { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+/* ── INGRESO CHIPS / LISTA ── */
+.concepto-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .concepto-chip {
-  padding: 7px 15px; border-radius: 20px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: 10px 13px; border-radius: 14px; gap: 2px;
   background: rgba(255,255,255,0.07); border: 0.5px solid var(--glass-border);
-  font-size: 13px; font-weight: 500; color: var(--text2);
-  cursor: pointer; font-family: inherit; flex-shrink: 0; transition: all .15s;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  font-size: 13px; font-weight: 600; color: var(--text);
+  cursor: pointer; font-family: inherit; transition: all .15s; text-align: left;
+  position: relative;
 }
-.concepto-chip.active { background: rgba(50,215,75,0.18); color: var(--green); border-color: rgba(50,215,75,0.4); box-shadow: 0 2px 10px rgba(50,215,75,0.15); }
+.concepto-chip:active { transform: scale(0.96); }
+.concepto-chip .chip-icon { font-size: 18px; margin-bottom: 2px; }
+.concepto-chip .chip-tag {
+  font-size: 10px; font-weight: 700; color: var(--teal);
+  background: rgba(90,200,250,0.15); border-radius: 6px;
+  padding: 1px 6px; margin-top: 2px; text-transform: uppercase; letter-spacing: .4px;
+}
+.concepto-chip.full-width { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 10px; }
+.concepto-chip.full-width .chip-icon { margin-bottom: 0; }
+.concepto-chip.active { background: rgba(50,215,75,0.18); color: var(--green); border-color: rgba(50,215,75,0.4); box-shadow: 0 2px 12px rgba(50,215,75,0.15); }
+.concepto-chip.active-sueldo { background: rgba(90,200,250,0.18); color: var(--teal); border-color: rgba(90,200,250,0.4); box-shadow: 0 2px 12px rgba(90,200,250,0.15); }
 </style>
 </head>
 <body>
@@ -732,8 +755,19 @@ body {
       <div class="field">
         <div class="field-label">Concepto</div>
         <div id="ingreso-quick-concepto" class="concepto-chips" style="display:none">
-          <button class="concepto-chip" onclick="setConceptoIngreso('Venta')">💵 Venta</button>
-          <button class="concepto-chip" onclick="setConceptoIngreso('Liberación MELI')">🛍️ Liberación MELI</button>
+          <button class="concepto-chip" onclick="setConceptoIngreso('Venta')">
+            <span class="chip-icon">💵</span>Venta
+          </button>
+          <button class="concepto-chip" onclick="setConceptoIngreso('Liberación MELI')">
+            <span class="chip-icon">🛍️</span>Liberación MELI
+          </button>
+          <button class="concepto-chip" id="chip-sueldo" onclick="setConceptoIngreso('Sueldo')">
+            <span class="chip-icon">💼</span>Sueldo
+            <span class="chip-tag">↓ Descuenta Enano</span>
+          </button>
+          <button class="concepto-chip" onclick="setConceptoIngreso('Otro')">
+            <span class="chip-icon">✏️</span>Otro…
+          </button>
         </div>
         <input type="text" id="f-concepto" placeholder="ej. Carnicería">
       </div>
@@ -1306,10 +1340,17 @@ function stepAjuste(delta) {
 
 // ── CONCEPTO INGRESO ──
 function setConceptoIngreso(val) {
-  document.getElementById('f-concepto').value = val;
+  var fc = document.getElementById('f-concepto');
+  if(val === 'Otro') {
+    fc.value = ''; fc.focus(); fc.placeholder = 'Escribí el concepto...';
+  } else {
+    fc.value = val; fc.placeholder = 'ej. Carnicería';
+  }
   document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){
-    b.classList.toggle('active', b.textContent.trim().indexOf(val) !== -1);
+    b.classList.remove('active','active-sueldo');
   });
+  var clicked = document.querySelector('#ingreso-quick-concepto .concepto-chip[onclick*="\''+val+'\'"]');
+  if(clicked) clicked.classList.add(val==='Sueldo'?'active-sueldo':'active');
 }
 
 // ── LOGIN ──
@@ -1808,9 +1849,9 @@ function setTipo(t) {
     document.getElementById('ingreso-quick-concepto').style.display=t==='ingreso'?'flex':'none';
     if(t==='ingreso'){
       var fc=document.getElementById('f-concepto');
-      if(!fc.value||fc.value==='') { fc.value='Venta'; setConceptoIngreso('Venta'); }
+      if(!fc.value||fc.value==='') { setConceptoIngreso('Venta'); }
     } else {
-      document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active');});
+      document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active','active-sueldo');});
     }
   }
 }
@@ -1834,16 +1875,22 @@ function guardar() {
     if(tipo==='gasto' && cat==='Tarjeta Pochi'){
       var delta=-Math.abs(monto);
       window._pochiMonto+=delta;
-      // Log as pochi movement
       if(!window._pochiLog) window._pochiLog=[];
       window._pochiLog.push({id:nextId(window._pochiLog),concepto:concepto,monto:delta,fecha:nowYMD(),tipo:'gasto',dataId:newEntry.id});
       saveScalars();
       _safeSave('pochiLog', window._pochiLog);
     }
+    // Sueldo: descuenta automáticamente de la Deuda Enano
+    if(tipo==='ingreso' && concepto==='Sueldo'){
+      var deltaEnano = -Math.abs(monto);
+      window._enanoMonto += deltaEnano;
+      window._enanoLog.push({id:nextId(window._enanoLog),deltaEnano:deltaEnano,dataId:newEntry.id,concepto:'Sueldo (auto)',monto:Math.abs(monto),fecha:nowYMD(),op:'descontar'});
+      saveScalars(); saveEnanoLog();
+    }
   }
   msg.style.color='var(--green)'; msg.textContent='✓ Guardado';
   document.getElementById('f-monto').value=''; document.getElementById('f-concepto').value='';
-  document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active','active-sueldo');});
   setTimeout(()=>{msg.textContent='';},2000);
   window._renderAll();
 }
