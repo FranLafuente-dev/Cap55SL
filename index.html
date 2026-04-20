@@ -127,7 +127,8 @@ body {
   border-radius: 28px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.1);
   display: flex; justify-content: space-around; align-items: center;
-  padding: 10px 0 10px; z-index: 200;
+  padding: 8px 0 8px; z-index: 200;
+  overflow: visible;
 }
 .nav-item {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -147,25 +148,30 @@ body {
 .nav-label { font-size: 10px; font-weight: 500; letter-spacing: .2px; }
 .nav-svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .fab {
-  width: 66px; height: 66px; border-radius: 50%;
+  width: 70px; height: 70px; border-radius: 50%;
   background: linear-gradient(145deg, #6ab8ff, #2372e0);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 28px rgba(77,159,255,0.65), 0 2px 8px rgba(0,0,0,0.4), inset 0 1.5px 0 rgba(255,255,255,0.3);
-  transition: transform .15s cubic-bezier(0.34,1.56,0.64,1), box-shadow .15s; margin-top: -22px;
-  flex-shrink: 0;
+  transition: transform .15s cubic-bezier(0.34,1.56,0.64,1), box-shadow .15s;
+  flex-shrink: 0; margin-top: 0;
 }
 .fab:active { transform: scale(0.88); box-shadow: 0 2px 12px rgba(77,159,255,0.35); }
 
 /* ── PANELS ── */
+#panels-wrap { position: relative; overflow: hidden; }
 .panel { display: none; padding: 0 0 16px; }
 .panel.active { display: block; }
-.panel.slide-from-right { animation: slideFromRight .36s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-.panel.slide-from-left  { animation: slideFromLeft  .36s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-.panel.slide-from-up    { animation: slideFromUp    .32s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-@keyframes slideFromRight { from { opacity:0.5; transform:translateX(52px); } to { opacity:1; transform:translateX(0); } }
-@keyframes slideFromLeft  { from { opacity:0.5; transform:translateX(-52px); } to { opacity:1; transform:translateX(0); } }
-@keyframes slideFromUp    { from { opacity:0; transform:translateY(18px) scale(0.982); } to { opacity:1; transform:translateY(0) scale(1); } }
+.panel.slide-from-right { animation: slideFromRight .46s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-from-left  { animation: slideFromLeft  .46s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-from-up    { animation: slideFromUp    .38s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-out-left   { animation: slideOutLeft   .42s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-out-right  { animation: slideOutRight  .42s cubic-bezier(0.22,0.61,0.36,1) both; }
+@keyframes slideFromRight { from { opacity:0.4; transform:translateX(70px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideFromLeft  { from { opacity:0.4; transform:translateX(-70px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideFromUp    { from { opacity:0; transform:translateY(22px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes slideOutLeft   { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(-70px); } }
+@keyframes slideOutRight  { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(70px); } }
 @keyframes sheetUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
 
 /* ── SCROLL SUAVE ── */
@@ -608,6 +614,7 @@ body {
   </div>
 </div>
 
+<div id="panels-wrap">
 <!-- ════════ PANEL INICIO ════════ -->
 <div id="panel-inicio" class="panel active">
   <div class="undo-bar">
@@ -912,6 +919,8 @@ body {
   <div class="card-title">Detalle del mes</div>
   <div class="card" id="res-detalle"></div>
 </div>
+
+</div><!-- /panels-wrap -->
 
 <!-- ════════ NAV ════════ -->
 <nav class="nav">
@@ -1810,29 +1819,20 @@ function eliminarAhorroLog(id) {
 // ── NAVIGATION ──
 var PANEL_ORDER = ['inicio','movimientos','pendientes','resumen'];
 
-function _animatePanel(el, cls) {
-  el.classList.remove('slide-from-right','slide-from-left','slide-from-up');
-  void el.offsetWidth;
-  el.classList.add(cls);
-  el.addEventListener('animationend', function h(){ el.classList.remove(cls); el.removeEventListener('animationend',h); }, {once:true});
-}
-
 function switchPanel(name, btn, dir) {
   var prev = document.querySelector('.panel.active');
   var next = document.getElementById('panel-'+name);
-  if (!next) return;
-  if (prev && prev === next) return;
+  if (!next || (prev && prev === next)) return;
 
-  // Determine slide direction from panel order
+  // Determine slide direction
   if (!dir && prev) {
-    var prevName = prev.id.replace('panel-','');
-    var pi = PANEL_ORDER.indexOf(prevName);
+    var pi = PANEL_ORDER.indexOf(prev.id.replace('panel-',''));
     var ni = PANEL_ORDER.indexOf(name);
     if (pi !== -1 && ni !== -1) dir = ni > pi ? 'right' : 'left';
     else dir = 'up';
   }
 
-  // Render content before showing
+  // Render content
   if(name==='inicio') renderInicio();
   if(name==='movimientos') renderMovimientos();
   if(name==='pendientes') renderPendientesTab();
@@ -1844,12 +1844,25 @@ function switchPanel(name, btn, dir) {
     if(fmsg) fmsg.textContent = '';
   }
 
-  if(prev) prev.classList.remove('active');
-  next.classList.add('active');
+  // Animate OUT: prev queda absolute durante la animación
+  if (prev) {
+    var exitCls = dir==='right' ? 'slide-out-left' : dir==='left' ? 'slide-out-right' : 'slide-out-left';
+    prev.style.cssText = 'position:absolute;top:0;left:0;width:100%;z-index:2;pointer-events:none';
+    prev.classList.add(exitCls);
+    prev.addEventListener('animationend', function h(){
+      prev.removeEventListener('animationend', h);
+      prev.classList.remove('active', exitCls);
+      prev.style.cssText = '';
+    }, {once:true});
+  }
 
-  // Animate incoming panel
-  var animCls = dir==='right' ? 'slide-from-right' : dir==='left' ? 'slide-from-left' : 'slide-from-up';
-  _animatePanel(next, animCls);
+  // Animate IN
+  next.classList.add('active');
+  var inCls = dir==='right' ? 'slide-from-right' : dir==='left' ? 'slide-from-left' : 'slide-from-up';
+  next.classList.remove('slide-from-right','slide-from-left','slide-from-up');
+  void next.offsetWidth;
+  next.classList.add(inCls);
+  next.addEventListener('animationend', function h(){ next.classList.remove(inCls); next.removeEventListener('animationend',h); }, {once:true});
 
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   if(btn&&btn.classList&&btn.classList.contains('nav-item')) btn.classList.add('active');
