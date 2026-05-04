@@ -2181,14 +2181,14 @@ function renderPendientesTab() {
       +'<div class="move-btns">'+(i>0?'<button class="move-btn" onclick="moverPend('+p.id+',-1)">▲</button>':'<div style="height:24px"></div>')+(i<total-1?'<button class="move-btn" onclick="moverPend('+p.id+',1)">▼</button>':'<div style="height:24px"></div>')+'</div>'
       +'<div class="pend-info" style="opacity:'+(p.pagado?'0.55':'1')+'">'
       +'<input class="pend-name-input'+(p.pagado?' pagado':'')+'" value="'+escapeHTML(p.concepto)+'" '+(p.pagado?'disabled':'')
-      +' onchange="updPend('+p.id+','nombre',this.value)" onblur="updPend('+p.id+','nombre',this.value)">'
+      +' onchange="updPend('+p.id+',\'nombre\',this.value)" onblur="updPend('+p.id+',\'nombre\',this.value)">'
       +'<div style="font-size:11px;color:var(--text2);margin-top:2px">'+escapeHTML(p.cat)+'</div>'
       +vencBadge(p)
-      +(!p.pagado?'<input type="date" class="pend-date-input" value="'+(p.vencimiento||'')+'" onchange="updPend('+p.id+','vencimiento',this.value)" placeholder="Vencimiento">':'')
+      +(!p.pagado?'<input type="date" class="pend-date-input" value="'+(p.vencimiento||'')+'" onchange="updPend('+p.id+',\'vencimiento\',this.value)" placeholder="Vencimiento">':'')
       +(p.pagado?'<div class="pend-paid-badge">✓ Pagado</div>':'')
       +'</div>'
       +'<input class="pend-inline-input" type="number" value="'+(p.monto||'')+'" placeholder="0" '+(p.pagado?'disabled style="opacity:0.45"':'')
-      +' oninput="updPend('+p.id+','monto',this.value)">'
+      +' oninput="updPend('+p.id+',\'monto\',this.value)">'
       +'<button class="pay-btn'+(p.pagado?' pagado':'')+'" onclick="pagarPendiente('+p.id+')">'+(p.pagado?'Desmarcar':'Pagar ✓')+'</button>'
       +'<button class="del-btn" onclick="deletePend('+p.id+')">✕</button>'
       +'</div>';
@@ -2557,12 +2557,11 @@ window._initApp=function(){
       var sugs=Object.entries(freq).sort(function(a,b){return b[1].count-a[1].count;}).slice(0,5);
       if(!sugs.length){_sl.style.display='none';return;}
       _sl.innerHTML=sugs.map(function(x){
-        var sval=x[0].replace(/\/g,'\\').replace(/'/g,"\'");
-        var scval=x[1].cat.replace(/\/g,'\\').replace(/'/g,"\'");
-        return'<div class="concepto-suggest-item" onclick="seleccionarConcepto(\''+sval+'\',\''+scval+'\')">'+escapeHTML(x[0])+'<span class="concepto-suggest-cat">'+escapeHTML(x[1].cat)+'</span></div>';
+        return'<div class="concepto-suggest-item" data-val="'+escapeHTML(x[0])+'" data-cat="'+escapeHTML(x[1].cat)+'">'+escapeHTML(x[0])+'<span class="concepto-suggest-cat">'+escapeHTML(x[1].cat)+'</span></div>';
       }).join('');
       _sl.style.display='block';
     });
+    _sl.addEventListener('click',function(e){var item=e.target.closest('.concepto-suggest-item');if(item){seleccionarConcepto(item.dataset.val,item.dataset.cat);}});
     document.addEventListener('click',function(e){if(!_fc.contains(e.target)&&!_sl.contains(e.target))_sl.style.display='none';});
   }
 };
