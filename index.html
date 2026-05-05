@@ -2093,13 +2093,13 @@ function guardar() {
       saveScalars();
       _safeSave('pochiLog', window._pochiLog);
     }
-    // Sueldo: descuenta de Deuda Enano. El saldo disponible lo excluye por concepto.
+    // Sueldo: suma a Enano. El saldo disponible lo excluye por concepto.
     if(tipo==='ingreso' && concepto==='Sueldo'){
-      var deltaEnano = -Math.abs(monto);
+      var deltaEnano = Math.abs(monto);
       window._enanoMonto += deltaEnano;
-      window._enanoLog.push({id:nextId(window._enanoLog),deltaEnano:deltaEnano,dataId:newEntry.id,concepto:'Sueldo (auto)',monto:Math.abs(monto),fecha:nowYMD(),op:'descontar'});
+      window._enanoLog.push({id:nextId(window._enanoLog),deltaEnano:deltaEnano,dataId:newEntry.id,concepto:'Sueldo (auto)',monto:Math.abs(monto),fecha:nowYMD(),op:'agregar'});
       saveScalars(); saveEnanoLog();
-      showToast('💼 Sueldo · Se descontaron '+fmt(Math.abs(monto))+' de Deuda Enano.');
+      showToast('💼 Sueldo · Se sumaron '+fmt(Math.abs(monto))+' a Enano.');
     }
     if(tipo==='gasto') checkAlertaGasto(cat);
   }
