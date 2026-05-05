@@ -2081,7 +2081,9 @@ function guardar() {
     savePend();
   } else {
     var cat=tipo==='ingreso'?'Ingreso':document.getElementById('f-cat').value;
+    var isSueldo=tipo==='ingreso'&&concepto==='Sueldo';
     var newEntry={id:nextId(window._data),tipo,fecha:nowYMD(),concepto,cat,monto};
+    if(isSueldo) newEntry._noSaldo=true;
     window._data.push(newEntry);
     saveData();
     // Auto-deduct from Pochi if gasto category is Tarjeta Pochi
@@ -2094,8 +2096,7 @@ function guardar() {
       _safeSave('pochiLog', window._pochiLog);
     }
     // Sueldo: descuenta de Deuda Enano, no suma al saldo disponible
-    if(tipo==='ingreso' && concepto==='Sueldo'){
-      newEntry._noSaldo = true;
+    if(isSueldo){
       var deltaEnano = -Math.abs(monto);
       window._enanoMonto += deltaEnano;
       window._enanoLog.push({id:nextId(window._enanoLog),deltaEnano:deltaEnano,dataId:newEntry.id,concepto:'Sueldo (auto)',monto:Math.abs(monto),fecha:nowYMD(),op:'descontar'});
