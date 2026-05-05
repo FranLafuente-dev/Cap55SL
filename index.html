@@ -1749,7 +1749,7 @@ function abrirAjusteSaldo() {
   setTimeout(()=>document.getElementById('ajuste-saldo-deseado').focus(),200);
 }
 function calcSaldoActual() {
-  const totalI=window._data.filter(d=>d.tipo==='ingreso').reduce((s,d)=>s+d.monto,0);
+  const totalI=window._data.filter(d=>d.tipo==='ingreso'&&!d._noSaldo).reduce((s,d)=>s+d.monto,0);
   const totalG=window._data.filter(d=>d.tipo==='gasto').reduce((s,d)=>s+d.monto,0);
   return (window._saldoBase||0)+totalI-totalG;
 }
@@ -2093,13 +2093,14 @@ function guardar() {
       saveScalars();
       _safeSave('pochiLog', window._pochiLog);
     }
-    // Sueldo: suma automáticamente a la cuenta Enano
+    // Sueldo: descuenta de Deuda Enano, no suma al saldo disponible
     if(tipo==='ingreso' && concepto==='Sueldo'){
-      var deltaEnano = Math.abs(monto);
+      newEntry._noSaldo = true;
+      var deltaEnano = -Math.abs(monto);
       window._enanoMonto += deltaEnano;
-      window._enanoLog.push({id:nextId(window._enanoLog),deltaEnano:deltaEnano,dataId:newEntry.id,concepto:'Sueldo (auto)',monto:Math.abs(monto),fecha:nowYMD(),op:'agregar'});
+      window._enanoLog.push({id:nextId(window._enanoLog),deltaEnano:deltaEnano,dataId:newEntry.id,concepto:'Sueldo (auto)',monto:Math.abs(monto),fecha:nowYMD(),op:'descontar'});
       saveScalars(); saveEnanoLog();
-      showToast('💼 Sueldo · Se sumaron '+fmt(Math.abs(monto))+' a Enano.');
+      showToast('💼 Sueldo · Se descontaron '+fmt(Math.abs(monto))+' de Deuda Enano.');
     }
     if(tipo==='gasto') checkAlertaGasto(cat);
   }
@@ -2368,7 +2369,7 @@ function renderInicio(){
   const deficit=saldo-totalPend-window._pochiMonto;
   const heroEl=document.getElementById('hero-saldo');
   heroEl.textContent=fmt(saldo); heroEl.className='hero-amount '+(saldo>=0?'pos':'neg');
-  const totalI=window._data.filter(d=>d.tipo==='ingreso').reduce((s,d)=>s+d.monto,0);
+  const totalI=window._data.filter(d=>d.tipo==='ingreso'&&!d._noSaldo).reduce((s,d)=>s+d.monto,0);
   const totalG=window._data.filter(d=>d.tipo==='gasto').reduce((s,d)=>s+d.monto,0);
   document.getElementById('stat-ing').textContent=fmt(totalI);
   document.getElementById('stat-gas').textContent=fmt(totalG);
@@ -2482,7 +2483,7 @@ function renderResumen(){
   const archiveMes=window._archive.find(a=>a.mes===ym);
   if(archiveMes) mesData=archiveMes.registros;
   const gastos=mesData.filter(d=>d.tipo==='gasto');
-  const ingresos=mesData.filter(d=>d.tipo==='ingreso');
+  const ingresos=mesData.filter(d=>d.tipo==='ingreso'&&!d._noSaldo);
   const totalG=gastos.reduce((s,d)=>s+d.monto,0);
   const totalI=ingresos.reduce((s,d)=>s+d.monto,0);
   const balance=totalI-totalG;
