@@ -1228,6 +1228,7 @@ async function loadAll(refs) {
       if (sd.pochiMonto !== undefined && sd.pochiMonto !== null) window._pochiMonto = isNaN(parseFloat(sd.pochiMonto)) ? 0 : parseFloat(sd.pochiMonto);
       if (sd.enanoMonto !== undefined && sd.enanoMonto !== null) window._enanoMonto = isNaN(parseFloat(sd.enanoMonto)) ? 0 : parseFloat(sd.enanoMonto);
       if (sd.ahorrosUSD !== undefined && sd.ahorrosUSD !== null) window._ahorrosUSD = isNaN(parseFloat(sd.ahorrosUSD)) ? 0 : parseFloat(sd.ahorrosUSD);
+      if (sd.saldoBase !== undefined && sd.saldoBase !== null) window._saldoBase = isNaN(parseFloat(sd.saldoBase)) ? 0 : parseFloat(sd.saldoBase);
       if (sd.lastMes) window._lastMes = sd.lastMes;
     }
     const av = parse(a); if (Array.isArray(av)) window._archive = av;
@@ -1245,7 +1246,11 @@ function setupListeners(refs) {
   const parse = (snap) => { try { return JSON.parse(snap.data()?.v || 'null'); } catch { return null; } };
   onSnapshot(refs.data, snap => {
     if (!window._fbReady || !snap.exists()) return;
-    const v = parse(snap); if (Array.isArray(v) && JSON.stringify(v) !== JSON.stringify(window._data)) { window._data = v; window._renderAll(); }
+    const v = parse(snap); if (!Array.isArray(v)) return;
+    // No pisar pagos de pendientes locales que Firestore aún no confirmó
+    const localPendPays = window._data.filter(d => d._pendId);
+    if (localPendPays.some(d => !v.find(s => s._pendId === d._pendId))) return;
+    if (JSON.stringify(v) !== JSON.stringify(window._data)) { window._data = v; window._renderAll(); }
   });
   onSnapshot(refs.pend, snap => {
     if (!window._fbReady || !snap.exists()) return;
@@ -1257,6 +1262,7 @@ function setupListeners(refs) {
     if (s.pochiMonto !== undefined && s.pochiMonto !== null) { const v = isNaN(parseFloat(s.pochiMonto)) ? 0 : parseFloat(s.pochiMonto); if(v !== window._pochiMonto){window._pochiMonto=v;changed=true;} }
     if (s.enanoMonto !== undefined && s.enanoMonto !== null) { const v = isNaN(parseFloat(s.enanoMonto)) ? 0 : parseFloat(s.enanoMonto); if(v !== window._enanoMonto){window._enanoMonto=v;changed=true;} }
     if (s.ahorrosUSD !== undefined && s.ahorrosUSD !== null) { const v = isNaN(parseFloat(s.ahorrosUSD)) ? 0 : parseFloat(s.ahorrosUSD); if(v !== window._ahorrosUSD){window._ahorrosUSD=v;changed=true;} }
+    if (s.saldoBase !== undefined && s.saldoBase !== null) { const v = isNaN(parseFloat(s.saldoBase)) ? 0 : parseFloat(s.saldoBase); if(v !== window._saldoBase){window._saldoBase=v;changed=true;} }
     if (changed) window._renderAll();
   });
   onSnapshot(refs.enanoLog, snap => { if (!snap.exists()) return; const v = parse(snap); if (Array.isArray(v)) window._enanoLog = v; });
