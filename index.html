@@ -548,6 +548,11 @@ body {
   transition: opacity .25s, transform .3s cubic-bezier(0.34,1.56,0.64,1);
 }
 #app-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#app-toast.toast-ok   { border-color: rgba(50,215,75,0.45);  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 16px rgba(50,215,75,0.12),  inset 0 1px 0 rgba(255,255,255,0.1); }
+#app-toast.toast-err  { border-color: rgba(255,69,58,0.45);  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 16px rgba(255,69,58,0.12),  inset 0 1px 0 rgba(255,255,255,0.1); }
+#app-toast.toast-info { border-color: rgba(77,159,255,0.45); box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 16px rgba(77,159,255,0.12), inset 0 1px 0 rgba(255,255,255,0.1); }
+@keyframes numPop { 0%{transform:scale(1)} 45%{transform:scale(1.08)} 100%{transform:scale(1)} }
+.hero-amount.pop { animation: numPop .38s cubic-bezier(0.34,1.56,0.64,1); }
 
 /* ── CONFIRM MODAL ── */
 .confirm-icon { font-size: 40px; text-align: center; margin-bottom: 12px; }
@@ -1459,12 +1464,16 @@ function saveArchive()   { _safeSave('archive', window._archive); }
 function saveEnanoLog()  { _safeSave('enanoLog', window._enanoLog); }
 function saveAhorrosLog(){ _safeSave('ahorrosLog', window._ahorrosLog); }
 
+// ── HAPTIC ──
+function haptic(ms) { try{ if(navigator.vibrate) navigator.vibrate(ms||50); }catch(e){} }
+
 // ── TOAST ──
-function showToast(msg, duration) {
+function showToast(msg, duration, type) {
   var t = document.getElementById('app-toast');
-  t.textContent = msg; t.classList.add('show');
+  t.textContent = msg;
+  t.className = type ? 'show toast-'+type : 'show';
   clearTimeout(t._to);
-  t._to = setTimeout(function(){ t.classList.remove('show'); }, duration || 3500);
+  t._to = setTimeout(function(){ t.classList.remove('show'); }, duration || 3000);
 }
 
 // ── CONFIRM MODAL ──
@@ -1476,6 +1485,7 @@ function showConfirm(msg, onOk, icon) {
   document.getElementById('modal-confirm').classList.add('visible');
 }
 function _confirmOk() {
+  haptic(40);
   document.getElementById('modal-confirm').classList.remove('visible');
   if (_confirmCallback) { var cb = _confirmCallback; _confirmCallback = null; cb(); }
 }
@@ -1541,8 +1551,8 @@ function applySnapshot(s) {
   window._renderAll();
 }
 function pushUndo(snap) { _undoStack.push(snap); if(_undoStack.length>30) _undoStack.shift(); _redoStack=[]; updateUndoButtons(); }
-function undoAction() { if(!_undoStack.length) return; _redoStack.push(snapshotState()); applySnapshot(_undoStack.pop()); updateUndoButtons(); }
-function redoAction() { if(!_redoStack.length) return; _undoStack.push(snapshotState()); applySnapshot(_redoStack.pop()); updateUndoButtons(); }
+function undoAction() { if(!_undoStack.length) return; haptic(35); _redoStack.push(snapshotState()); applySnapshot(_undoStack.pop()); updateUndoButtons(); }
+function redoAction() { if(!_redoStack.length) return; haptic(35); _undoStack.push(snapshotState()); applySnapshot(_redoStack.pop()); updateUndoButtons(); }
 function updateUndoButtons() {
   document.getElementById('undo-btn').disabled=!_undoStack.length;
   document.getElementById('redo-btn').disabled=!_redoStack.length;
@@ -1657,6 +1667,7 @@ function guardarEnanoReg() {
   }
   window._enanoLog.push({id:nextId(window._enanoLog),deltaEnano,dataId,concepto:op==='descontar'?'Cobro Deuda Enano':'Transferencia a Enano',monto,fecha:nowYMD(),op});
   saveEnanoLog();
+  haptic(50);
   msg.style.color='var(--green)'; msg.textContent=enanoImpactoActivo?'✓ Registrado e impactado en tu saldo':'✓ Registrado (solo Deuda Enano)';
   document.getElementById('enano-reg-monto').value='';
   setTimeout(()=>{msg.textContent='';},2500);
@@ -1720,6 +1731,7 @@ function guardarAhorro() {
     window._data.push({id:nextId(window._data),tipo:tipoMovimiento,fecha:nowYMD(),concepto:conceptoMovimiento,cat:'Ahorros',monto:ars});
     saveData();
   }
+  haptic(50);
   msg.style.color='var(--green)'; msg.textContent='✓ Ahorro registrado';
   document.getElementById('ahorro-usd').value='';
   document.getElementById('ahorro-tc').value='';
@@ -1803,7 +1815,7 @@ function renderDetalleList() {
   if(!_detalleActual){el.innerHTML='';return;}
   if(_detalleActual==='enano') {
     const logs=[...window._enanoLog].reverse();
-    if(!logs.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos</div>';return;}
+    if(!logs.length){el.innerHTML='<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">📭</div><div style="font-size:13px;color:var(--text3);font-weight:500">Sin movimientos</div></div>';return;}
     el.innerHTML=logs.map(l=>{
       const isPos=l.deltaEnano<0; // descontar = recibí plata = positivo para mí
       const colorAmt=isPos?'var(--green)':'var(--red)';
@@ -1818,7 +1830,7 @@ function renderDetalleList() {
     }).join('');
   } else if(_detalleActual==='ahorros') {
     const logs=[...window._ahorrosLog].reverse();
-    if(!logs.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos</div>';return;}
+    if(!logs.length){el.innerHTML='<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">📭</div><div style="font-size:13px;color:var(--text3);font-weight:500">Sin movimientos</div></div>';return;}
     el.innerHTML=logs.map(l=>{
       const isPos=l.op==='sumar';
       return `<div class="list-row">
@@ -2104,9 +2116,17 @@ function guardar() {
     }
     if(tipo==='gasto') checkAlertaGasto(cat);
   }
+  haptic(60);
+  document.activeElement.blur();
   msg.style.color='var(--green)'; msg.textContent='✓ Guardado';
   document.getElementById('f-monto').value=''; document.getElementById('f-concepto').value='';
   document.querySelectorAll('#ingreso-quick-concepto .concepto-chip').forEach(function(b){b.classList.remove('active','active-sueldo');});
+  showToast(tipo==='pendiente'?'⏳ Pendiente agregado':'✓ Guardado', 2000, 'ok');
+  var _navTimer=setTimeout(function(){
+    if(tipo==='pendiente') switchPanel('pendientes',document.querySelectorAll('.nav-item')[2]);
+    else switchPanel('inicio',document.querySelector('.nav-item'));
+  },1300);
+  document.getElementById('f-monto').addEventListener('focus',function(){clearTimeout(_navTimer);},{once:true});
   setTimeout(()=>{msg.textContent='';},2000);
   window._renderAll();
 }
@@ -2140,6 +2160,7 @@ function pagarPendiente(id) {
   }
   showConfirm('¿Marcar "'+p.concepto+'" como pagado?\nSe registrará como gasto.', function(){
     pushUndo(snapshotState());
+    haptic(60);
     p.pagado=true;
     window._data.push({id:nextId(window._data),tipo:'gasto',fecha:nowYMD(),concepto:p.concepto+' (pagado)',cat:p.cat,monto:p.monto,_pendId:id});
     savePend(); saveData(); window._renderAll();
@@ -2150,8 +2171,9 @@ function revivirPendiente(id) {
   const p=window._pend.find(p=>p.id===id); if(!p) return;
   pushUndo(snapshotState());
   p.pagado=false;
+  haptic(50);
   savePend(); window._renderAll();
-  showToast('🔄 '+p.concepto+' reactivado');
+  showToast('🔄 '+p.concepto+' reactivado', 2200, 'ok');
 }
 
 // ── PENDIENTES ──
@@ -2208,7 +2230,7 @@ function renderPendientesTab() {
     return (a.orden??0)-(b.orden??0);
   });
   const paid=window._pend.filter(p=>p.pagado);
-  if(!window._pend.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin pendientes</div>';return;}
+  if(!window._pend.length){el.innerHTML='<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">✅</div><div style="font-size:13px;color:var(--text3);font-weight:500">Todo al día</div></div>';return;}
   const today=nowYMD();
 
   function vencBadge(p){
@@ -2377,7 +2399,10 @@ function renderInicio(){
   const totalPend=window._pend.filter(p=>!p.pagado).reduce((s,p)=>s+(p.monto||0),0);
   const deficit=saldo-totalPend-window._pochiMonto;
   const heroEl=document.getElementById('hero-saldo');
+  var _prevSaldo=heroEl._lastVal;
   heroEl.textContent=fmt(saldo); heroEl.className='hero-amount '+(saldo>=0?'pos':'neg');
+  if(_prevSaldo!==undefined&&_prevSaldo!==saldo){heroEl.classList.add('pop');setTimeout(()=>heroEl.classList.remove('pop'),400);}
+  heroEl._lastVal=saldo;
   const totalI=window._data.filter(d=>d.tipo==='ingreso'&&d.concepto!=='Sueldo').reduce((s,d)=>s+d.monto,0);
   const totalG=window._data.filter(d=>d.tipo==='gasto').reduce((s,d)=>s+d.monto,0);
   document.getElementById('stat-ing').textContent=fmt(totalI);
@@ -2401,7 +2426,7 @@ function renderInicio(){
     pieChart=new Chart(document.getElementById('chartPie'),{type:'doughnut',data:{labels:entries.map(([c])=>c),datasets:[{data:entries.map(([,v])=>v),backgroundColor:entries.map(([cat],i)=>autoColor(cat,i)),borderWidth:2,borderColor:'rgba(0,21,61,0.6)',hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+fmt(c.raw)+' ('+Math.round(c.raw/totalMes*100)+'%)'}}}}});
   } else { document.getElementById('chartPie').getContext('2d').clearRect(0,0,300,210); }
   const recent=[...window._data].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id).slice(0,8);
-  document.getElementById('recientes-list').innerHTML=recent.length?recent.map(d=>rowHTML(d,true,true)).join(''):'<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos</div>';
+  document.getElementById('recientes-list').innerHTML=recent.length?recent.map(d=>rowHTML(d,true,true)).join(''):'<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">📭</div><div style="font-size:13px;color:var(--text3);font-weight:500">Sin movimientos</div></div>';
 }
 
 // ── RENDER ALL ──
@@ -2441,7 +2466,7 @@ function renderMovimientos(){
     const logs=[...window._enanoLog].reverse();
     document.getElementById('movimientos-list').innerHTML=logs.length
       ?logs.map(l=>{const isPos=l.deltaEnano<0;return`<div class="list-row"><div class="row-icon" style="background:rgba(90,200,250,0.15)">🤝</div><div class="row-body"><div class="row-name">${l.concepto||'Movimiento Enano'}</div><div class="row-sub">${l.fecha?fmtDate(l.fecha):''}</div></div><div class="row-right"><div class="row-amount" style="color:${isPos?'var(--green)':'var(--red)'}">${isPos?'−':'+'}${fmt(Math.abs(l.deltaEnano))}</div></div><button class="edit-btn" onclick="abrirEditarEnanoLog(${l.id})">✏️</button><button class="del-btn" onclick="eliminarEnanoLog(${l.id})">✕</button></div>`;}).join('')
-      :'<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos Enano</div>';
+      :'<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">🤝</div><div style="font-size:13px;color:var(--text3);font-weight:500">Sin movimientos Enano</div></div>';
     return;
   }
   // Ahorros tab
@@ -2452,7 +2477,7 @@ function renderMovimientos(){
     const logs=[...window._ahorrosLog].reverse();
     document.getElementById('movimientos-list').innerHTML=logs.length
       ?logs.map(l=>{const isPos=l.op==='sumar';return`<div class="list-row"><div class="row-icon" style="background:rgba(255,214,10,0.15)">💰</div><div class="row-body"><div class="row-name">${isPos?'Ahorro':'Venta de ahorro'}</div><div class="row-sub">${l.fecha?fmtDate(l.fecha):''} ${l.tc?'· TC: '+l.tc:''}</div></div><div class="row-right"><div class="row-amount" style="color:${isPos?'var(--green)':'var(--red)'}">${isPos?'+':'−'}${fmtUSD(Math.abs(l.usd))}</div><div class="row-date">${l.ars?fmt(l.ars):''}</div></div><button class="edit-btn" onclick="abrirEditarAhorroLog(${l.id})">✏️</button><button class="del-btn" onclick="eliminarAhorroLog(${l.id})">✕</button></div>`;}).join('')
-      :'<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos de Ahorros</div>';
+      :'<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">💰</div><div style="font-size:13px;color:var(--text3);font-weight:500">Sin movimientos de Ahorros</div></div>';
     return;
   }
   // Standard
@@ -2470,7 +2495,7 @@ function renderMovimientos(){
   if(activeFilter==='gasto'||(activeCatFilter&&rows.some(d=>d.tipo==='gasto'))){shEl.innerHTML=`<div class="section-header"><div class="section-header-title">Total gastos</div><div class="section-header-total amount-neg">${fmt(fG)}</div></div>`;}
   else if(activeFilter==='ingreso'){shEl.innerHTML=`<div class="section-header"><div class="section-header-title">Total ingresos</div><div class="section-header-total amount-pos">${fmt(fI)}</div></div>`;}
   else{shEl.innerHTML=`<div class="section-header" style="flex-wrap:wrap;gap:6px"><div style="display:flex;justify-content:space-between;width:100%;align-items:center"><span class="section-header-title">Ingresos</span><span class="section-header-total amount-pos">${fmt(fI)}</span></div><div style="display:flex;justify-content:space-between;width:100%;align-items:center"><span class="section-header-title">Gastos</span><span class="section-header-total amount-neg">${fmt(fG)}</span></div></div>`;}
-  document.getElementById('movimientos-list').innerHTML=rows.length?rows.map(d=>rowHTML(d,true,true)).join(''):'<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">Sin movimientos</div>';
+  document.getElementById('movimientos-list').innerHTML=rows.length?rows.map(d=>rowHTML(d,true,true)).join(''):'<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">📭</div><div style="font-size:13px;color:var(--text3);font-weight:500">Sin movimientos</div></div>';
 }
 
 function rowHTML(d,showDel,showEdit){
