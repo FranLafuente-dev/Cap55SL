@@ -310,6 +310,8 @@ body {
 .del-btn:active { background: rgba(255,69,58,0.28); transform: scale(0.88); }
 .edit-btn { width: 30px; height: 30px; border-radius: 50%; background: rgba(77,159,255,0.12); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; color: var(--blue); transition: background .15s, transform .1s; }
 .edit-btn:active { background: rgba(77,159,255,0.28); transform: scale(0.88); }
+.revivir-btn { width: 30px; height: 30px; border-radius: 50%; background: rgba(90,200,250,0.12); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; color: var(--teal); transition: background .15s, transform .1s; }
+.revivir-btn:active { background: rgba(90,200,250,0.28); transform: scale(0.88); }
 
 /* ── CARGAR ── */
 .cargar-panel { padding: 0 16px; }
@@ -847,7 +849,6 @@ body {
           </button>
           <button class="concepto-chip" id="chip-sueldo" onclick="setConceptoIngreso('Sueldo')">
             <span class="chip-icon">💼</span>Sueldo
-            <span class="chip-tag">↓ Descuenta Enano</span>
           </button>
           <button class="concepto-chip" onclick="setConceptoIngreso('Otro')">
             <span class="chip-icon">✏️</span>Otro…
@@ -1288,12 +1289,6 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 });
-// Mostrar login SOLO si nunca se autenticó en este dispositivo
-setTimeout(function(){
-  if(!window._fbReady && !window._appInited){
-    document.getElementById('login-screen').style.display='flex';
-  }
-}, 5000);
 </script>
 
 <script>
@@ -2151,6 +2146,14 @@ function pagarPendiente(id) {
   }, '✅');
 }
 
+function revivirPendiente(id) {
+  const p=window._pend.find(p=>p.id===id); if(!p) return;
+  pushUndo(snapshotState());
+  p.pagado=false;
+  savePend(); window._renderAll();
+  showToast('🔄 '+p.concepto+' reactivado');
+}
+
 // ── PENDIENTES ──
 function agregarPend() {
   const nombre=document.getElementById('pnew-nombre').value.trim();
@@ -2239,6 +2242,7 @@ function renderPendientesTab() {
       +'<input class="pend-inline-input" type="number" data-pid="'+p.id+'" value="'+(p.monto||'')+'" placeholder="0" '+(p.pagado?'disabled style="opacity:0.45"':'')
       +' oninput="updPendMonto(this)">'
       +'<button class="pay-btn'+(p.pagado?' pagado':'')+'" onclick="pagarPendiente('+p.id+')">'+(p.pagado?'Desmarcar':'Pagar ✓')+'</button>'
+      +(p.pagado?'<button class="revivir-btn" onclick="revivirPendiente('+p.id+')">🔄</button>':'')
       +'<button class="del-btn" onclick="deletePend('+p.id+')">✕</button>'
       +'</div>';
   }
@@ -2726,34 +2730,7 @@ window.addEventListener('beforeinstallprompt',function(e){
 });
 
 if('serviceWorker' in navigator){
-  const swCode=`
-const CACHE='mf-v3';
-const PRECACHE=[
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
-];
-self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(PRECACHE).catch(()=>{})));
-  self.skipWaiting();
-});
-self.addEventListener('activate',e=>{
-  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
-  self.clients.claim();
-});
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET')return;
-  e.respondWith(
-    caches.match(e.request).then(cached=>{
-      const net=fetch(e.request).then(r=>{
-        if(r&&r.ok){const cl=r.clone();caches.open(CACHE).then(c=>c.put(e.request,cl));}
-        return r;
-      }).catch(()=>cached||new Response('',{status:408}));
-      return cached||net;
-    })
-  );
-});`;
-  const blob=new Blob([swCode],{type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 </script>
 </body>
