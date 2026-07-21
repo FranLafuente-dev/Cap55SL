@@ -598,6 +598,7 @@ body {
 .concepto-suggest-item:last-child{border-bottom:none}
 .concepto-suggest-item:active{background:rgba(77,159,255,0.15)}
 .concepto-suggest-cat{font-size:11px;color:var(--text2);background:rgba(255,255,255,0.07);border-radius:8px;padding:2px 7px;flex-shrink:0;margin-left:6px}
+.concepto-suggest-monto{font-size:11px;font-weight:700;color:var(--blue);background:rgba(77,159,255,0.12);border-radius:8px;padding:2px 7px;flex-shrink:0}
 
 /* ── TOGGLE ESENCIAL / INNECESARIO ── */
 .cat-auto-hint{color:var(--blue);font-weight:600;letter-spacing:.3px;text-transform:none;font-size:10px}
@@ -640,8 +641,24 @@ body {
   background:rgba(255,159,10,0.07);
   backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
   border:0.5px solid rgba(255,159,10,0.25);border-radius:var(--r);
-  margin:0 16px;overflow:hidden;
+  margin:8px 16px 0;overflow:hidden;
 }
+.recur-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;cursor:pointer;transition:background .15s;
+}
+.recur-head:active{background:rgba(255,159,10,0.1)}
+.recur-head-left{display:flex;align-items:center;gap:9px;min-width:0}
+.recur-bell{font-size:15px;line-height:1}
+.recur-head-title{font-size:14px;font-weight:600}
+.recur-badge{
+  min-width:20px;height:20px;padding:0 6px;border-radius:20px;
+  background:var(--orange);color:#1a1200;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 10px rgba(255,159,10,0.45);
+}
+.recur-badge.vencido{background:var(--red);color:#fff;box-shadow:0 0 10px rgba(255,69,58,0.5)}
+.recur-chevron{color:var(--text2);font-size:17px;line-height:1}
 .recur-row{display:flex;align-items:center;gap:9px;padding:10px 12px;border-top:0.5px solid rgba(255,255,255,0.07)}
 .recur-row:first-of-type{border-top:none}
 .recur-ico{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
@@ -805,8 +822,6 @@ body {
   </div>
 
   <!-- Aviso de gastos recurrentes próximos -->
-  <div id="recur-avisos"></div>
-
   <!-- Pendientes y déficit -->
   <div class="pend-dash-simple" onclick="switchPanel('pendientes', document.querySelectorAll('.nav-item')[2])">
     <div class="pend-dash-title">Pendientes de pago</div>
@@ -859,6 +874,9 @@ body {
       </div>
     </div>
   </div>
+
+  <!-- Gastos próximos (colapsado, no invade la pantalla) -->
+  <div id="recur-avisos"></div>
 
   <div class="card-title" id="torta-title">Gastos del mes</div>
   <div class="card">
@@ -1473,8 +1491,8 @@ Object.assign(CAT_HEX_MAP, {
 const SUBCAT_BASE = {};
 Object.entries(SUBCAT_GROUPS).forEach(function(e){ e[1].forEach(function(s){ if(!SUBCAT_BASE[s]) SUBCAT_BASE[s]=e[0]; }); });
 window._subcat = {};   // aprendido por vos, persistido en Firestore
-// Sugerencias de recurrentes eliminadas. Prextamo y Peluquería excluidas por pedido tuyo.
-window._recur  = { ignore: ['prextamo','prestamo','peluqueria'] };
+// Sugerencias de recurrentes eliminadas a mano. Estas las descartaste vos.
+window._recur  = { ignore: ['prextamo','prestamo','peluqueria','farmacia','bolsas','boslas','envios flex','envio fs','envios fs'] };
 
 function normSub(s){
   return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
@@ -1541,7 +1559,12 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 function fmt(n) { const abs=Math.abs(Math.round(n)); const s='$'+abs.toLocaleString('es-AR'); return n<0?'−'+s:s; }
 function fmtUSD(n) { return 'USD '+Math.abs(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(s) { const [y,m,d]=s.split('-'); return d+'/'+m; }
-function nowYMD() { return new Date().toISOString().split('T')[0]; }
+// Fecha LOCAL, no UTC: el día cambia a las 00:00 de acá, no a las 21:00.
+function ymdLocal(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function ymLocal(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+// Mes desplazado n meses (con día 1 para no saltear meses cortos)
+function ymShift(n,base){ var d=base?new Date(base):new Date(); d.setDate(1); d.setMonth(d.getMonth()+n); return ymLocal(d); }
+function nowYMD() { return ymdLocal(); }
 function nowYM()  { return nowYMD().slice(0,7); }
 function nextId(arr) { return arr.length?Math.max(...arr.map(x=>x.id))+1:1; }
 function catEmoji(cat) { return CAT_EMOJIS[cat]||'📦'; }
@@ -1558,7 +1581,7 @@ function getDiasTranscurridos(){return new Date().getDate();}
 function getDiasMes(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate();}
 function getAllRegistros(ym){const arch=window._archive.find(a=>a.mes===ym);if(arch)return arch.registros;if(ym===nowYM())return window._data;return[];}
 function getCatMesData(cat,ym){return getAllRegistros(ym).filter(d=>d.tipo==='gasto'&&catDe(d)===cat&&d.monto>0).reduce((s,d)=>s+d.monto,0);}
-function getCatMesAnterior(cat){const d=new Date();d.setMonth(d.getMonth()-1);return getCatMesData(cat,d.toISOString().slice(0,7));}
+function getCatMesAnterior(cat){return getCatMesData(cat,ymShift(-1));}
 function getCatHistorico12m(cat){
   const now=new Date();let total=0,count=0;
   for(const arch of window._archive){
@@ -1581,7 +1604,7 @@ function getSalaryRef(){
 }
 function buildCatStatsHTML(cat,ym,mesOffset){
   const totalCat=getCatMesData(cat,ym);
-  const prevD=new Date();prevD.setMonth(prevD.getMonth()-1);const prevYM=prevD.toISOString().slice(0,7);
+  const prevYM=ymShift(-1);
   const mesAnt=getCatMesAnterior(cat);const hist=getCatHistorico12m(cat);
   const dias=mesOffset===0?getDiasTranscurridos():getDiasMes(ym);
   const diasPrev=getDiasMes(prevYM);
@@ -1604,7 +1627,7 @@ function checkAlertaGasto(cat){
   const totalAct=window._data.filter(d=>d.tipo==='gasto'&&catDe(d)===cat&&d.monto>0&&d.fecha.startsWith(ym)).reduce((s,d)=>s+d.monto,0);
   // buscar mes anterior: primero en archive, luego en _data (si nunca se cerró el mes)
   const prevD=new Date();prevD.setMonth(prevD.getMonth()-1);
-  const prevYM=prevD.toISOString().slice(0,7);
+  const prevYM=ymShift(-1);
   const arch=window._archive.find(a=>a.mes===prevYM);
   const prevRegs=arch?arch.registros:window._data.filter(d=>d.fecha&&d.fecha.startsWith(prevYM));
   const mesAnt=prevRegs.filter(d=>d.tipo==='gasto'&&catDe(d)===cat&&d.monto>0).reduce((s,d)=>s+d.monto,0);
@@ -2684,7 +2707,7 @@ const RECUR_SPREAD_DIA= 7;      // ventana de días admitida
 const RECUR_AVISO_ANTES = 3;    // se avisa desde N días antes
 const RECUR_AVISO_DESPUES = 5;  // y sigue avisando hasta N días después
 
-function ymOffset(n){ var d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+n); return d.toISOString().slice(0,7); }
+function ymOffset(n){ return ymShift(n); }
 
 function detectarRecurrentes(){
   var ventana=[ymOffset(-3),ymOffset(-2),ymOffset(-1),nowYM()];
@@ -2742,14 +2765,28 @@ function recurrentesEnVentana(){
   });
 }
 
+// Arranca cerrado: una sola línea con el contador. Se abre al tocarla.
+var _recurAbierto=false;
+function toggleRecur(){ _recurAbierto=!_recurAbierto; haptic(25); renderRecurrentes(); }
+
 function renderRecurrentes(){
   var host=document.getElementById('recur-avisos');
   if(!host) return;
   var lista=recurrentesEnVentana();
-  if(!lista.length){ host.innerHTML=''; return; }
+  if(!lista.length){ host.innerHTML=''; _recurAbierto=false; return; }
   var hoy=new Date().getDate();
-  host.innerHTML='<div class="card-title" style="margin-top:20px">Se vienen estos gastos</div>'
-    +'<div class="recur-card">'+lista.map(function(r){
+  // ¿Alguno ya se pasó de fecha? entonces el contador va en rojo
+  var vencido=lista.some(function(r){return r.diaTip<hoy;});
+  var cab='<div class="recur-head'+(_recurAbierto?' abierto':'')+'" onclick="toggleRecur()">'
+      +'<div class="recur-head-left">'
+        +'<span class="recur-bell">🔔</span>'
+        +'<span class="recur-head-title">Gastos próximos</span>'
+        +'<span class="recur-badge'+(vencido?' vencido':'')+'">'+lista.length+'</span>'
+      +'</div>'
+      +'<span class="recur-chevron">'+(_recurAbierto?'⌄':'›')+'</span>'
+    +'</div>';
+  if(!_recurAbierto){ host.innerHTML='<div class="recur-card cerrado">'+cab+'</div>'; return; }
+  host.innerHTML='<div class="recur-card">'+cab+lista.map(function(r){
       var delta=r.diaTip-hoy;
       var cuando = delta>1 ? 'en '+delta+' días' : (delta===1?'mañana':(delta===0?'hoy':'hace '+Math.abs(delta)+(Math.abs(delta)===1?' día':' días')));
       var tarde = delta<0;
@@ -2768,6 +2805,8 @@ function renderRecurrentes(){
     }).join('')
     +'<div class="recur-foot">Solo un aviso · el monto es editable por si aumentó</div></div>';
 }
+// Al registrar o descartar, si se vacía la lista el recuadro desaparece solo
+function _recurRefresh(){ renderRecurrentes(); }
 
 // ✓ El gasto entró: se registra con el monto que dejaste en el campo
 function pagarRecurrente(key){
@@ -2943,7 +2982,7 @@ function rowHTML(d,showDel,showEdit){
 
 // ── RESUMEN ──
 let resChart=null, resMesOffset=0, activeResCat=null;
-function getMesData(offset){const d=new Date();d.setMonth(d.getMonth()+offset);return{year:d.getFullYear(),month:d.getMonth(),ym:d.toISOString().slice(0,7)};}
+function getMesData(offset){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+offset);return{year:d.getFullYear(),month:d.getMonth(),ym:ymLocal(d)};}
 
 function renderResumen(){
   const {year,month,ym}=getMesData(resMesOffset);
@@ -2965,7 +3004,7 @@ function renderResumen(){
     <div class="res-stat"><div class="res-stat-label">Gastos</div><div class="res-stat-val amount-neg">${fmt(totalG)}</div></div>
     <div class="res-stat"><div class="res-stat-label">Balance</div><div class="res-stat-val ${balance>=0?'amount-pos':'amount-neg'}">${fmt(balance)}</div></div>
     <div class="res-stat"><div class="res-stat-label">Ahorros mes</div><div class="res-stat-val" style="color:var(--gold)">${fmtUSD(totalAhorrosMes)}</div></div>`;
-  const _pD=new Date();_pD.setMonth(_pD.getMonth()-1);const _pYM=_pD.toISOString().slice(0,7);
+  const _pYM=ymShift(-1);
   const _aP=window._archive.find(a=>a.mes===_pYM);
   const _gP=_aP?_aP.registros.filter(d=>d.tipo==='gasto'&&d.monto>0):[];
   const _tGP=_gP.reduce((s,d)=>s+d.monto,0);
@@ -3021,7 +3060,7 @@ function promedioHistCat(cat, ym, nMeses){
   var refs=[], d=new Date(ym+'-01T12:00:00');
   for(var i=1;i<=(nMeses||3);i++){
     var p=new Date(d); p.setMonth(p.getMonth()-i);
-    var pym=p.toISOString().slice(0,7);
+    var pym=ymLocal(p);
     var regs=getAllRegistros(pym);
     if(!regs||!regs.length) continue;
     var t=gastosReales(regs).filter(function(r){return r.monto>0 && (!cat || catDe(r)===cat);})
@@ -3267,24 +3306,37 @@ window._initApp=function(){
       _hist.filter(function(d){return d.tipo==='gasto';}).forEach(function(d){
         var label=String(d.concepto||'').replace(/\s*\(pagado\)\s*$/,'');
         var k=normSub(label);
-        if(k.includes(normSub(val))){if(!freq[label])freq[label]={count:0,cat:catDe(d)};freq[label].count++;freq[label].cat=catDe(d);}
+        if(k.includes(normSub(val))){
+          if(!freq[label])freq[label]={count:0,cat:catDe(d),monto:0,fecha:''};
+          freq[label].count++; freq[label].cat=catDe(d);
+          if(d.fecha>=freq[label].fecha){freq[label].fecha=d.fecha;freq[label].monto=d.monto;}  // último importe
+        }
       });
       var sugs=Object.entries(freq).sort(function(a,b){return b[1].count-a[1].count;}).slice(0,5);
       if(!sugs.length){_sl.style.display='none';return;}
       _sl.innerHTML=sugs.map(function(x){
-        return'<div class="concepto-suggest-item" data-val="'+escapeHTML(x[0])+'" data-cat="'+escapeHTML(x[1].cat)+'">'+escapeHTML(x[0])+'<span class="concepto-suggest-cat">'+escapeHTML(x[1].cat)+'</span></div>';
+        // Solo mostramos el importe si es un gasto frecuente (3+ veces): ahí sí es una referencia útil
+        var frec=x[1].count>=3;
+        return'<div class="concepto-suggest-item" data-val="'+escapeHTML(x[0])+'" data-cat="'+escapeHTML(x[1].cat)+'" data-monto="'+(frec?Math.round(x[1].monto):'')+'">'
+          +escapeHTML(x[0])
+          +'<span style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+          +(frec?'<span class="concepto-suggest-monto">'+fmt(x[1].monto)+'</span>':'')
+          +'<span class="concepto-suggest-cat">'+escapeHTML(x[1].cat)+'</span></span></div>';
       }).join('');
       _sl.style.display='block';
     });
-    _sl.addEventListener('click',function(e){var item=e.target.closest('.concepto-suggest-item');if(item){seleccionarConcepto(item.dataset.val,item.dataset.cat);}});
+    _sl.addEventListener('click',function(e){var item=e.target.closest('.concepto-suggest-item');if(item){seleccionarConcepto(item.dataset.val,item.dataset.cat,item.dataset.monto);}});
     document.addEventListener('click',function(e){if(!_fc.contains(e.target)&&!_sl.contains(e.target))_sl.style.display='none';});
   }
 };
-function seleccionarConcepto(concepto,cat){
+function seleccionarConcepto(concepto,cat,monto){
   var fc=document.getElementById('f-concepto');var sl=document.getElementById('concepto-suggest-list');
   if(fc)fc.value=concepto;if(sl)sl.style.display='none';
   var cs=document.getElementById('f-cat');
   if(cs&&cat){var op=[...cs.options].find(function(o){return o.value===cat;});if(op){cs.value=cat;aplicarDefaultEsencial(cat);}}
+  // Precarga el último importe solo si todavía no escribiste uno
+  var fm=document.getElementById('f-monto');
+  if(fm&&monto&&!fm.value){ fm.value=monto; fm.select&&setTimeout(function(){fm.focus();fm.select();},50); }
 }
 
 // ── STARTUP: si ya estuvo autenticado, arrancar con datos de cache ──
