@@ -1492,7 +1492,7 @@ const SUBCAT_BASE = {};
 Object.entries(SUBCAT_GROUPS).forEach(function(e){ e[1].forEach(function(s){ if(!SUBCAT_BASE[s]) SUBCAT_BASE[s]=e[0]; }); });
 window._subcat = {};   // aprendido por vos, persistido en Firestore
 // Sugerencias de recurrentes eliminadas a mano. Estas las descartaste vos.
-window._recur  = { ignore: ['prextamo','prestamo','peluqueria','farmacia','bolsas','boslas','envios flex','envio fs','envios fs'] };
+window._recur  = { ignore: ['prextamo','prestamo','peluqueria','farmacia','bolsas','boslas','envios flex','envio fs','envios fs','carniceria','estacionamiento','estacionamiento dot','dentista'] };
 
 function normSub(s){
   return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
