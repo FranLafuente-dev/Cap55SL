@@ -393,9 +393,9 @@ html { scroll-behavior: smooth; }
 .pend-edit-row { display: flex; align-items: center; padding: 11px 16px; border-top: 0.5px solid var(--sep); gap: 8px; }
 .pend-edit-row:first-child { border-top: none; }
 .pend-info { flex: 1; min-width: 0; }
-.pend-inline-input { width: 80px; padding: 7px 8px; border: 0.5px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.07); color: var(--text); font-size: 13px; font-family: inherit; text-align: right; outline: none; flex-shrink: 0; transition: border-color .2s; }
+.pend-inline-input { width: 94px; padding: 7px 8px; border: 0.5px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.07); color: var(--text); font-size: 16px; font-family: inherit; text-align: right; outline: none; flex-shrink: 0; transition: border-color .2s; }
 .pend-inline-input:focus { border-color: var(--blue); }
-.pend-name-input { width: 100%; padding: 4px 0; border: none; border-bottom: 0.5px solid var(--border); background: transparent; color: var(--text); font-size: 14px; font-weight: 500; font-family: inherit; outline: none; transition: border-color .2s; }
+.pend-name-input { width: 100%; padding: 4px 0; border: none; border-bottom: 0.5px solid var(--border); background: transparent; color: var(--text); font-size: 16px; font-weight: 500; font-family: inherit; outline: none; transition: border-color .2s; }
 .pend-name-input:focus { border-color: var(--blue); }
 .pend-name-input.pagado { color: var(--text2); text-decoration: line-through; }
 .pend-paid-badge { font-size: 10px; font-weight: 700; color: var(--green); background: rgba(50,215,75,0.14); border-radius: 20px; padding: 2px 8px; display: inline-block; margin-top: 3px; text-transform: uppercase; letter-spacing: .5px; }
@@ -669,8 +669,8 @@ html { scroll-behavior: smooth; }
 .recur-sub b{color:var(--orange);font-weight:700}
 .recur-sub.tarde b{color:var(--red)}
 .recur-monto{
-  width:82px;padding:7px 8px;border:0.5px solid rgba(255,159,10,0.35);border-radius:10px;
-  background:rgba(255,255,255,0.07);color:var(--text);font-size:13px;font-family:inherit;
+  width:96px;padding:7px 8px;border:0.5px solid rgba(255,159,10,0.35);border-radius:10px;
+  background:rgba(255,255,255,0.07);color:var(--text);font-size:16px;font-family:inherit;
   text-align:right;outline:none;flex-shrink:0;transition:border-color .2s;-moz-appearance:textfield;
 }
 .recur-monto:focus{border-color:var(--orange);background:rgba(255,159,10,0.1)}
@@ -944,7 +944,7 @@ html { scroll-behavior: smooth; }
     <div id="form-standard">
       <div class="field">
         <div class="field-label">Monto (ARS)</div>
-        <input type="number" id="f-monto" placeholder="0" inputmode="decimal">
+        <input type="number" id="f-monto" placeholder="0" inputmode="decimal" enterkeyhint="next" autocomplete="off">
       </div>
       <div id="neg-hint" style="font-size:12px;color:var(--text2);margin:-5px 0 9px;display:none">Podés ingresar negativo para descontar saldo</div>
       <div class="field">
@@ -964,7 +964,7 @@ html { scroll-behavior: smooth; }
           </button>
         </div>
         <div class="concepto-field-wrap">
-          <input type="text" id="f-concepto" placeholder="ej. Carnicería" autocomplete="off">
+          <input type="text" id="f-concepto" placeholder="ej. Carnicería" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done">
           <div class="concepto-suggest-list" id="concepto-suggest-list" style="display:none"></div>
         </div>
       </div>
@@ -991,11 +991,11 @@ html { scroll-behavior: smooth; }
     <div id="form-enano" style="display:none">
       <div class="field">
         <div class="field-label">Monto (ARS)</div>
-        <input type="number" id="enano-reg-monto" placeholder="0" inputmode="decimal">
+        <input type="number" id="enano-reg-monto" placeholder="0" inputmode="decimal" enterkeyhint="done" autocomplete="off">
       </div>
       <div class="field">
         <div class="field-label">Operación</div>
-        <select id="enano-reg-op" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
+        <select id="enano-reg-op" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:16px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
           <option value="descontar">Descontar saldo — recibí plata del Enano</option>
           <option value="aumentar">Aumentar saldo — le mandé plata al Enano</option>
         </select>
@@ -1017,7 +1017,7 @@ html { scroll-behavior: smooth; }
     <div id="form-ahorros" style="display:none">
       <div class="field">
         <div class="field-label">Operación</div>
-        <select id="ahorro-op" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
+        <select id="ahorro-op" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:16px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
           <option value="sumar">Ahorrar (sumar USD)</option>
           <option value="restar">Vender ahorros (restar USD)</option>
         </select>
@@ -1058,10 +1058,10 @@ html { scroll-behavior: smooth; }
 
   <div style="padding:0 16px;margin-top:16px">
     <div style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Agregar pendiente</div>
-    <div class="field"><input type="text" id="pnew-nombre" placeholder="Concepto (ej. AYSA)"></div>
+    <div class="field"><input type="text" id="pnew-nombre" placeholder="Concepto (ej. AYSA)" autocomplete="off" autocorrect="off" autocapitalize="sentences" enterkeyhint="next"></div>
     <div class="field-row" style="margin-bottom:12px">
       <div class="field"><select id="pnew-cat"></select></div>
-      <div class="field"><input type="number" id="pnew-monto" placeholder="Monto"></div>
+      <div class="field"><input type="number" id="pnew-monto" placeholder="Monto" inputmode="decimal" enterkeyhint="done" autocomplete="off"></div>
     </div>
     <div class="field">
       <div class="field-label" style="font-size:10px">Vencimiento (opcional)</div>
@@ -1130,7 +1130,7 @@ html { scroll-behavior: smooth; }
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">Tarjeta Pochi</div>
-    <div class="field"><div class="field-label">Monto (ARS)</div><input type="number" id="pochi-input" placeholder="0" inputmode="decimal" style="font-size:22px;font-weight:700;"></div>
+    <div class="field"><div class="field-label">Monto (ARS)</div><input type="number" id="pochi-input" placeholder="0" inputmode="decimal" enterkeyhint="done" autocomplete="off" style="font-size:22px;font-weight:700;"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="cerrarEditPochi()">Cancelar</button>
       <button class="modal-save" onclick="guardarPochi()">Guardar</button>
@@ -1143,12 +1143,12 @@ html { scroll-behavior: smooth; }
     <div class="modal-handle"></div>
     <div class="modal-title">Deuda Enano</div>
     <div class="field"><div class="field-label">Signo</div>
-      <select id="enano-signo" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:15px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
+      <select id="enano-signo" style="width:100%;padding:13px 14px;border:0.5px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text);font-size:16px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;">
         <option value="pos">Positivo — me deben a mí</option>
         <option value="neg">Negativo — le debo yo</option>
       </select>
     </div>
-    <div class="field"><div class="field-label">Monto (ARS)</div><input type="number" id="enano-input" placeholder="0" inputmode="decimal" style="font-size:22px;font-weight:700;"></div>
+    <div class="field"><div class="field-label">Monto (ARS)</div><input type="number" id="enano-input" placeholder="0" inputmode="decimal" enterkeyhint="done" autocomplete="off" style="font-size:22px;font-weight:700;"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="cerrarEditEnano()">Cancelar</button>
       <button class="modal-save" style="background:rgba(90,200,250,0.85)" onclick="guardarEnano()">Guardar</button>
@@ -1160,7 +1160,7 @@ html { scroll-behavior: smooth; }
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">Editar Ahorros (USD)</div>
-    <div class="field"><div class="field-label">Saldo total (USD)</div><input type="number" id="ahorros-input" placeholder="0.00" step="0.01" inputmode="decimal" style="font-size:22px;font-weight:700;"></div>
+    <div class="field"><div class="field-label">Saldo total (USD)</div><input type="number" id="ahorros-input" placeholder="0.00" step="0.01" inputmode="decimal" enterkeyhint="done" autocomplete="off" style="font-size:22px;font-weight:700;"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="cerrarEditAhorros()">Cancelar</button>
       <button class="modal-save" style="background:rgba(255,214,10,0.8);color:#000" onclick="guardarAhorrosManual()">Guardar</button>
@@ -1174,9 +1174,9 @@ html { scroll-behavior: smooth; }
     <div class="modal-title">Ajustar saldo</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Escribí el saldo que querés que quede. Se calculará automáticamente el ajuste necesario.</div>
     <div class="field"><div class="field-label">Saldo actual</div><input type="text" id="ajuste-saldo-actual" readonly style="opacity:0.6;font-size:16px;"></div>
-    <div class="field"><div class="field-label">Saldo deseado</div><input type="number" id="ajuste-saldo-deseado" placeholder="Ingresá el saldo correcto" inputmode="decimal"></div>
+    <div class="field"><div class="field-label">Saldo deseado</div><input type="number" id="ajuste-saldo-deseado" placeholder="Ingresá el saldo correcto" inputmode="decimal" enterkeyhint="next" autocomplete="off"></div>
     <div id="ajuste-preview" style="font-size:13px;color:var(--text2);margin:-4px 0 12px;min-height:18px"></div>
-    <div class="field"><div class="field-label">Concepto</div><input type="text" id="ajuste-concepto" placeholder="ej. Ajuste de caja" value="Ajuste manual"></div>
+    <div class="field"><div class="field-label">Concepto</div><input type="text" id="ajuste-concepto" placeholder="ej. Ajuste de caja" value="Ajuste manual" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="cerrarAjusteSaldo()">Cancelar</button>
       <button class="modal-save" onclick="guardarAjuste()">Registrar</button>
@@ -1188,7 +1188,7 @@ html { scroll-behavior: smooth; }
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">Nueva categoría</div>
-    <div class="field"><div class="field-label">Nombre</div><input type="text" id="nueva-cat-input" placeholder="ej. Mascotas"></div>
+    <div class="field"><div class="field-label">Nombre</div><input type="text" id="nueva-cat-input" placeholder="ej. Mascotas" autocomplete="off" autocapitalize="words" enterkeyhint="done"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="cerrarModalCat()">Cancelar</button>
       <button class="modal-save" onclick="guardarNuevaCat()">Agregar</button>
@@ -1200,8 +1200,8 @@ html { scroll-behavior: smooth; }
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">Editar registro</div>
-    <div class="field"><div class="field-label">Monto</div><input type="number" id="edit-monto" placeholder="0" inputmode="decimal"></div>
-    <div class="field"><div class="field-label">Concepto</div><input type="text" id="edit-concepto"></div>
+    <div class="field"><div class="field-label">Monto</div><input type="number" id="edit-monto" placeholder="0" inputmode="decimal" enterkeyhint="next" autocomplete="off"></div>
+    <div class="field"><div class="field-label">Concepto</div><input type="text" id="edit-concepto" autocomplete="off" autocapitalize="sentences" enterkeyhint="done"></div>
     <div class="field"><div class="field-label">Fecha</div><input type="date" id="edit-fecha"></div>
     <div class="field" id="edit-cat-field"><div class="field-label">Categoría</div><select id="edit-cat"></select></div>
     <div class="field" id="edit-esencial-field">
@@ -2427,7 +2427,7 @@ function guardar() {
     if(tipo==='gasto') checkAlertaGasto(cat);
   }
   haptic(60);
-  document.activeElement.blur();
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   msg.style.color='var(--green)'; msg.textContent='✓ Guardado';
   document.getElementById('f-monto').value=''; document.getElementById('f-concepto').value='';
   var _ah=document.getElementById('cat-auto-hint'); if(_ah)_ah.style.display='none';
@@ -2502,6 +2502,8 @@ function agregarPend() {
   var _pv=document.getElementById('pnew-vencimiento');window._pend.push({id:nextId(window._pend),concepto:nombre,cat,monto,pagado:false,vencimiento:_pv&&_pv.value?_pv.value:null,orden:window._pend.length});
   savePend();
   document.getElementById('pnew-nombre').value=''; document.getElementById('pnew-monto').value='';
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  haptic(50);
   msg.style.color='var(--green)'; msg.textContent='✓ Agregado';
   setTimeout(()=>msg.textContent='',2000);
   window._renderAll();
@@ -3335,10 +3337,72 @@ history.pushState(null, '', location.href);
 })();
 
 // ── INIT ──
+// ── TECLADO: Enter para avanzar y para guardar ──
+// Sin esto había que bajar el teclado a mano para llegar al botón Guardar,
+// que con 8 cargas por día es mucha fricción.
+function _enterFlow(pares){
+  pares.forEach(function(p){
+    var el=document.getElementById(p.id);
+    if(!el) return;
+    el.addEventListener('keydown',function(e){
+      if(e.key!=='Enter') return;
+      e.preventDefault();
+      if(p.next){
+        var n=document.getElementById(p.next);
+        if(n){ n.focus(); if(n.select) n.select(); }
+      } else if(p.run){
+        el.blur();                       // baja el teclado antes de guardar
+        setTimeout(p.run,60);            // deja que el layout se acomode
+      }
+    });
+  });
+}
+function _initTeclado(){
+  _enterFlow([
+    {id:'f-monto',    next:'f-concepto'},
+    {id:'f-concepto', run:function(){ var sl=document.getElementById('concepto-suggest-list'); if(sl) sl.style.display='none'; guardar(); }},
+    {id:'pnew-nombre',next:'pnew-monto'},
+    {id:'pnew-monto', run:agregarPend},
+    {id:'pochi-input',   run:guardarPochi},
+    {id:'enano-input',   run:guardarEnano},
+    {id:'ahorros-input', run:guardarAhorrosManual},
+    {id:'enano-reg-monto', run:guardarEnanoReg},
+    {id:'ajuste-saldo-deseado', next:'ajuste-concepto'},
+    {id:'ajuste-concepto', run:guardarAjuste},
+    {id:'nueva-cat-input', run:guardarNuevaCat},
+    {id:'edit-monto',    next:'edit-concepto'},
+    {id:'edit-concepto', run:guardarEdicion},
+    {id:'login-email',   next:'login-pass'},
+    {id:'login-pass',    run:doLogin}
+  ]);
+  // En los campos numéricos, bloquear caracteres que dejan el input en blanco
+  ['f-monto','pnew-monto','pochi-input','enano-input','ahorros-input','enano-reg-monto',
+   'ajuste-saldo-deseado','edit-monto','edit-enano-monto'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',function(e){ if(['e','E','+'].indexOf(e.key)>=0) e.preventDefault(); });
+  });
+  // Al abrirse el teclado, el campo de detalle y sus sugerencias podían quedar
+  // tapados. Se centra el campo una vez que el teclado terminó de subir.
+  var fc=document.getElementById('f-concepto');
+  if(fc) fc.addEventListener('focus',function(){
+    setTimeout(function(){
+      try{ fc.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){ fc.scrollIntoView(); }
+    },320);
+  });
+  // Tocar fuera de un campo baja el teclado (en iOS quedaba abierto)
+  document.addEventListener('touchend',function(e){
+    var a=document.activeElement;
+    if(!a||!/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;
+    if(e.target===a || e.target.closest('input,select,textarea,button,.concepto-suggest-list,.modal-sheet')) return;
+    a.blur();
+  },{passive:true});
+}
+
 window._initApp=function(){
   setHeaderDate();
   fillAllSels();
   setTipo('gasto');
+  _initTeclado();
   renderInicio();
   var _fc=document.getElementById('f-concepto');
   var _sl=document.getElementById('concepto-suggest-list');
