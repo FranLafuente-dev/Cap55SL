@@ -162,11 +162,11 @@ body {
 #panels-wrap { position: relative; overflow: hidden; }
 .panel { display: none; padding: 0 0 16px; }
 .panel.active { display: block; }
-.panel.slide-from-right { animation: slideFromRight .46s cubic-bezier(0.22,0.61,0.36,1) both; }
-.panel.slide-from-left  { animation: slideFromLeft  .46s cubic-bezier(0.22,0.61,0.36,1) both; }
-.panel.slide-from-up    { animation: slideFromUp    .38s cubic-bezier(0.22,0.61,0.36,1) both; }
-.panel.slide-out-left   { animation: slideOutLeft   .42s cubic-bezier(0.22,0.61,0.36,1) both; }
-.panel.slide-out-right  { animation: slideOutRight  .42s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-from-right { animation: slideFromRight .30s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-from-left  { animation: slideFromLeft  .30s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-from-up    { animation: slideFromUp    .26s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-out-left   { animation: slideOutLeft   .26s cubic-bezier(0.22,0.61,0.36,1) both; }
+.panel.slide-out-right  { animation: slideOutRight  .26s cubic-bezier(0.22,0.61,0.36,1) both; }
 @keyframes slideFromRight { from { opacity:0.4; transform:translateX(70px); } to { opacity:1; transform:translateX(0); } }
 @keyframes slideFromLeft  { from { opacity:0.4; transform:translateX(-70px); } to { opacity:1; transform:translateX(0); } }
 @keyframes slideFromUp    { from { opacity:0; transform:translateY(22px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
@@ -175,7 +175,8 @@ body {
 @keyframes sheetUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
 
 /* ── SCROLL SUAVE ── */
-* { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+html { scroll-behavior: smooth; }
+* { -webkit-overflow-scrolling: touch; }
 
 /* ── INTERACCIÓN TÁCTIL ── */
 .card, .secondary-card, .hero, .deficit-chip, .pend-dash-simple, .res-stat {
@@ -1566,7 +1567,23 @@ function ymLocal(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMon
 function ymShift(n,base){ var d=base?new Date(base):new Date(); d.setDate(1); d.setMonth(d.getMonth()+n); return ymLocal(d); }
 function nowYMD() { return ymdLocal(); }
 function nowYM()  { return nowYMD().slice(0,7); }
-function nextId(arr) { return arr.length?Math.max(...arr.map(x=>x.id))+1:1; }
+// IDs únicos de por vida. Al cerrar el mes _data queda vacío, así que un
+// nextId ingenuo reiniciaba en 1 y los IDs nuevos chocaban con los dataId que
+// enanoLog/pochiLog seguían apuntando desde meses anteriores: al borrar un
+// registro se descontaba el monto de OTRO movimiento. Por eso el máximo se
+// busca también en el archivo histórico y en los logs.
+function nextId(arr) {
+  var max=0, i;
+  if(arr) for(i=0;i<arr.length;i++) if(typeof arr[i].id==='number' && arr[i].id>max) max=arr[i].id;
+  if(arr===window._data){
+    (window._archive||[]).forEach(function(m){
+      (m.registros||[]).forEach(function(r){ if(typeof r.id==='number' && r.id>max) max=r.id; });
+    });
+    (window._enanoLog||[]).forEach(function(l){ if(typeof l.dataId==='number' && l.dataId>max) max=l.dataId; });
+    (window._pochiLog||[]).forEach(function(l){ if(typeof l.dataId==='number' && l.dataId>max) max=l.dataId; });
+  }
+  return max+1;
+}
 function catEmoji(cat) { return CAT_EMOJIS[cat]||'📦'; }
 function autoColor(cat,idx) { if(CAT_HEX_MAP[cat]) return CAT_HEX_MAP[cat]; const p=['#FF6B6B','#FFA500','#FFE66D','#4ECDC4','#45B7D1','#96E6A1','#DDA0DD','#F08080']; return p[idx%p.length]; }
 
@@ -1768,14 +1785,19 @@ function doLogin() {
 // ── UNDO/REDO ──
 let _undoStack=[], _redoStack=[];
 function snapshotState() {
-  return { data:JSON.stringify(window._data), pend:JSON.stringify(window._pend), pochiMonto:window._pochiMonto, enanoMonto:window._enanoMonto, ahorrosUSD:window._ahorrosUSD, saldoBase:window._saldoBase||0, enanoLog:JSON.stringify(window._enanoLog), ahorrosLog:JSON.stringify(window._ahorrosLog), pochiLog:JSON.stringify(window._pochiLog||[]) };
+  // archive y lastMes van incluidos para que el cierre de mes también se pueda deshacer
+  return { data:JSON.stringify(window._data), pend:JSON.stringify(window._pend), pochiMonto:window._pochiMonto, enanoMonto:window._enanoMonto, ahorrosUSD:window._ahorrosUSD, saldoBase:window._saldoBase||0, enanoLog:JSON.stringify(window._enanoLog), ahorrosLog:JSON.stringify(window._ahorrosLog), pochiLog:JSON.stringify(window._pochiLog||[]), archive:JSON.stringify(window._archive||[]), lastMes:window._lastMes };
 }
 function applySnapshot(s) {
   window._data=JSON.parse(s.data); window._pend=JSON.parse(s.pend);
   window._pochiMonto=s.pochiMonto; window._enanoMonto=s.enanoMonto; window._ahorrosUSD=s.ahorrosUSD; window._saldoBase=s.saldoBase||0;
   window._enanoLog=JSON.parse(s.enanoLog); window._ahorrosLog=JSON.parse(s.ahorrosLog);
   window._pochiLog=JSON.parse(s.pochiLog||'[]');
+  var archChanged=false;
+  if(s.archive!==undefined){ var na=JSON.parse(s.archive); if(JSON.stringify(window._archive)!==s.archive){window._archive=na;archChanged=true;} }
+  if(s.lastMes!==undefined && s.lastMes!==window._lastMes){ window._lastMes=s.lastMes; archChanged=true; }
   saveData(); savePend(); saveScalars(); saveEnanoLog(); saveAhorrosLog(); _safeSave('pochiLog',window._pochiLog);
+  if(archChanged) saveArchive();
   window._renderAll();
 }
 function pushUndo(snap) { _undoStack.push(snap); if(_undoStack.length>30) _undoStack.shift(); _redoStack=[]; updateUndoButtons(); }
@@ -1800,7 +1822,16 @@ function checkCierreMes() {
     if(!lastMes){window._lastMes=currMes;saveScalars();}
   }
 }
+// Pide confirmación: archiva el mes entero y antes no había forma de deshacerlo.
 function cerrarMes() {
+  const lm=window._lastMes||nowYM();
+  const [_y,_m]=lm.split('-');
+  const nombre=MESES[parseInt(_m)-1]+' '+_y;
+  const cuantos=window._data.filter(d=>d.fecha.startsWith(lm)).length;
+  showConfirm('¿Cerrar '+nombre+'?\n'+cuantos+' registros pasan al histórico y el saldo se conserva.', _doCerrarMes, '📦');
+}
+function _doCerrarMes() {
+  pushUndo(snapshotState());
   const lastMes=window._lastMes||nowYM();
   const saldoPreservado=calcSaldoActual();
   const mesData=window._data.filter(d=>d.fecha.startsWith(lastMes));
@@ -2201,6 +2232,11 @@ function switchPanel(name, btn, dir) {
   var prev = document.querySelector('.panel.active');
   var next = document.getElementById('panel-'+name);
   if (!next || (prev && prev === next)) return;
+  // Si venías de un tap rápido, puede haber quedado un panel a medio animar
+  // en position:absolute. Se limpia antes de empezar.
+  document.querySelectorAll('.panel').forEach(function(p){
+    if(p!==prev && p!==next){ p.style.cssText=''; p.classList.remove('active','slide-out-left','slide-out-right','slide-from-right','slide-from-left','slide-from-up'); }
+  });
 
   // Determine slide direction
   if (!dir && prev) {
@@ -2210,11 +2246,14 @@ function switchPanel(name, btn, dir) {
     else dir = 'up';
   }
 
-  // Render content
+  // Render content.
+  // Resumen construye un gráfico de Chart.js: si se hace acá bloquea el hilo
+  // justo cuando arranca la animación y se ve un tirón. Va después del primer
+  // frame; el panel entra vacío 16ms y se completa enseguida.
   if(name==='inicio') renderInicio();
   if(name==='movimientos') renderMovimientos();
   if(name==='pendientes') renderPendientesTab();
-  if(name==='resumen') renderResumen();
+  if(name==='resumen') requestAnimationFrame(function(){ requestAnimationFrame(renderResumen); });
   if(name==='cargar') {
     document.getElementById('f-concepto').value = '';
     document.getElementById('f-monto').value = '';
@@ -2409,7 +2448,10 @@ function _doEliminarEntry(id) {
   pushUndo(snapshotState());
   const entry=window._data.find(d=>d.id===id);
   if(entry&&entry._enanoReg){
-    const logEntry=window._enanoLog.find(e=>e.dataId===id);
+    // Busca el log MÁS RECIENTE con ese dataId: hay logs viejos que quedaron
+    // apuntando a IDs reciclados antes del fix de nextId, y el primero que
+    // coincidía podía ser de otro mes.
+    const logEntry=[...window._enanoLog].reverse().find(e=>e.dataId===id&&(!e.fecha||!entry.fecha||e.fecha===entry.fecha));
     if(logEntry){window._enanoMonto-=logEntry.deltaEnano;window._enanoLog=window._enanoLog.filter(e=>e.id!==logEntry.id);saveScalars();saveEnanoLog();}
   }
   window._data=window._data.filter(d=>d.id!==id); saveData(); window._renderAll();
@@ -2893,10 +2935,15 @@ function renderInicio(){
   document.getElementById('pie-legend').innerHTML=entries.length
     ? entries.map(([cat,val],i)=>'<div class="pie-leg"><div class="pie-dot" style="background:'+autoColor(cat,i)+'"></div>'+cat+' &middot; '+(totalMes?Math.round(val/totalMes*100):0)+'%</div>').join('')
     : '<span style="font-size:12px;color:var(--text2)">Sin gastos este mes</span>';
+  // El gráfico solo se redibuja si el panel Inicio está a la vista: _renderAll()
+  // corre en cada guardado y recrear el canvas sin necesidad cuesta frames.
+  var _iniVisible=document.getElementById('panel-inicio').classList.contains('active');
+  if(_iniVisible){
   if(pieChart){pieChart.destroy();pieChart=null;}
   if(entries.length){
     pieChart=new Chart(document.getElementById('chartPie'),{type:'doughnut',data:{labels:entries.map(([c])=>c),datasets:[{data:entries.map(([,v])=>v),backgroundColor:entries.map(([cat],i)=>autoColor(cat,i)),borderWidth:2,borderColor:'rgba(0,21,61,0.6)',hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+fmt(c.raw)+' ('+Math.round(c.raw/totalMes*100)+'%)'}}}}});
   } else { document.getElementById('chartPie').getContext('2d').clearRect(0,0,300,210); }
+  }
   const recent=[...window._data].sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id).slice(0,8);
   document.getElementById('recientes-list').innerHTML=recent.length?recent.map(d=>rowHTML(d,true,true)).join(''):'<div style="padding:36px 16px;text-align:center"><div style="font-size:30px;margin-bottom:8px;opacity:0.3">📭</div><div style="font-size:13px;color:var(--text3);font-weight:500">Sin movimientos</div></div>';
 }
