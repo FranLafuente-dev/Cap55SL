@@ -1271,7 +1271,7 @@ html { scroll-behavior: smooth; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCVlW4tvjTPrZ48_PM4sirT1uRTOP5THKI",
@@ -1285,7 +1285,14 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 let db;
-try { db = initializeFirestore(fbApp, { localCache: persistentLocalCache() }); }
+/* La caché de Firestore vive en IndexedDB con una clave que es origen +
+   proyecto. Mi Entrenador (franlafuente-dev.github.io/mi-entrenador) usa el
+   MISMO origen y el MISMO proyecto, así que las dos apps comparten ese
+   almacén. persistentLocalCache() sin tabManager lo abre en modo exclusivo:
+   con la otra app presente, esta no conseguía el permiso para sincronizar y
+   se quedaba escribiendo solo en local, sin subir nada al servidor.
+   El modo multi-pestaña coordina en vez de competir. */
+try { db = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
 catch(e) { const {getFirestore:gf} = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"); db = gf(fbApp); }
 
 // Set persistence FIRST before any auth operations

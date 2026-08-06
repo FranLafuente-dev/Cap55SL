@@ -1,4 +1,4 @@
-const CACHE = 'mf-v5';
+const CACHE = 'mf-v6';
 const SHELL = [
   './',
   './index.html',
