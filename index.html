@@ -1098,6 +1098,24 @@ html { scroll-behavior: smooth; }
   </button>
   <div class="card-title">Detalle del mes</div>
   <div class="card" id="res-detalle"></div>
+
+  <div class="card-title">Sincronización</div>
+  <div class="card" style="font-size:13px;line-height:1.55">
+    <div id="sync-info" style="opacity:.8;margin-bottom:12px">—</div>
+    <button class="dl-btn" style="margin:0 0 8px" onclick="descargarRespaldo()">
+      Descargar respaldo de este teléfono
+    </button>
+    <div style="opacity:.65;font-size:12px;margin:10px 0 6px">
+      Si los dos teléfonos muestran cosas distintas, hacé el respaldo en los dos
+      y después elegí en cuál están los datos buenos.
+    </div>
+    <button class="dl-btn" style="margin:0 0 8px" onclick="forzarSubida()">
+      Este teléfono tiene los datos buenos · subirlos
+    </button>
+    <button class="dl-btn" style="margin:0" onclick="forzarBajada()">
+      Los buenos están en el otro · traerlos acá
+    </button>
+  </div>
 </div>
 
 </div><!-- /panels-wrap -->
@@ -1383,9 +1401,20 @@ function setupListeners(refs) {
   onSnapshot(refs.data, snap => {
     if (!window._fbReady || !snap.exists()) return;
     const v = parse(snap); if (!Array.isArray(v)) return;
-    // No pisar pagos de pendientes locales que Firestore aún no confirmó
-    const localPendPays = window._data.filter(d => d._pendId);
-    if (localPendPays.some(d => !v.find(s => s._pendId === d._pendId))) return;
+    /* No pisar pagos de pendientes locales que Firestore aun no confirmo,
+       PERO SOLO POR UNOS SEGUNDOS.
+
+       Antes esta guarda no tenia limite de tiempo: si un pago local nunca
+       llegaba al servidor -exactamente lo que pasa cuando la sincronizacion
+       se corta- este telefono rechazaba TODOS los snapshots para siempre y
+       ya nunca volvia a converger con el otro. Pasada la ventana, mandan los
+       datos del servidor. */
+    const VENTANA_PAGO_MS = 90000;
+    const pagoReciente = window._pendPayAt && (Date.now() - window._pendPayAt) < VENTANA_PAGO_MS;
+    if (pagoReciente) {
+      const localPendPays = window._data.filter(d => d._pendId);
+      if (localPendPays.some(d => !v.find(s => s._pendId === d._pendId))) return;
+    }
     if (JSON.stringify(v) !== JSON.stringify(window._data)) { window._data = v; window._renderAll(); }
   });
   onSnapshot(refs.pend, snap => {
@@ -1693,6 +1722,63 @@ window._saveAllToCache=function(){
   _lsSave('archive',window._archive);_lsSave('enanoLog',window._enanoLog);
   _lsSave('ahorrosLog',window._ahorrosLog);_lsSave('pochiLog',window._pochiLog);
   _lsSave('subcat',window._subcat);_lsSave('recur',window._recur);
+};
+
+/* ── RECONCILIAR DOS TELEFONOS ────────────────────────────────────────────
+   Cada documento guarda el array ENTERO, asi que el ultimo que escribe pisa
+   lo del otro. Cuando los dos telefonos quedaron con datos distintos no hay
+   forma de que el codigo adivine cual vale: lo elige el usuario. Antes de
+   cualquier cosa, respaldo. */
+window.descargarRespaldo = function() {
+  const todo = {
+    generado: new Date().toISOString(),
+    data: window._data, pend: window._pend, cats: window._cats,
+    archive: window._archive, enanoLog: window._enanoLog,
+    ahorrosLog: window._ahorrosLog, pochiLog: window._pochiLog,
+    subcat: window._subcat, recur: window._recur,
+    pochiMonto: window._pochiMonto, enanoMonto: window._enanoMonto,
+    ahorrosUSD: window._ahorrosUSD, saldoBase: window._saldoBase,
+    lastMes: window._lastMes
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(todo, null, 2)], { type: 'application/json' }));
+  a.download = 'mis-finanzas-respaldo-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+};
+
+window.forzarSubida = function() {
+  showConfirm('Vas a subir lo de ESTE telefono al servidor.\n' +
+    'Lo que haya en el otro telefono y no este aca, se pierde.\n' +
+    'Hiciste el respaldo?', function() {
+    if (!window._fbReady || !window._fbSave) { showToast && showToast('Sin conexion'); return; }
+    ['data','pend','cats','archive','enanoLog','ahorrosLog','pochiLog','subcat','recur']
+      .forEach(k => window._fbSave(k, window['_' + k]));
+    saveScalars();
+    showToast && showToast('Subido. Abri el otro telefono y usa "traerlos aca".');
+  }, '⬆️');
+};
+
+window.forzarBajada = function() {
+  showConfirm('Vas a descartar lo de ESTE telefono y traer lo del servidor.\n' +
+    'Lo que hayas cargado aca y no este alla, se pierde.\n' +
+    'Hiciste el respaldo?', async function() {
+    ['data','pend','cats','archive','enanoLog','ahorrosLog','pochiLog','subcat','recur','scalars']
+      .forEach(k => { try { localStorage.removeItem('mf_' + k); } catch (e) {} });
+    window._pendPayAt = 0;              // que ninguna guarda frene el snapshot
+    if (window._fbRefs) await loadAll(window._fbRefs);
+    window._saveAllToCache && window._saveAllToCache();
+    window._renderAll && window._renderAll();
+    showToast && showToast('Listo: este telefono quedo igual al servidor.');
+  }, '⬇️');
+};
+
+window.pintarInfoSync = function() {
+  const el = document.getElementById('sync-info');
+  if (!el) return;
+  const n = Array.isArray(window._data) ? window._data.length : 0;
+  const p = Array.isArray(window._pend) ? window._pend.length : 0;
+  el.textContent = 'En este telefono: ' + n + ' movimientos y ' + p + ' pendientes.';
 };
 
 // ── SAVE ──
@@ -2485,6 +2571,7 @@ function pagarPendiente(id) {
     haptic(60);
     p.pagado=true;
     window._data.push({id:nextId(window._data),tipo:'gasto',fecha:nowYMD(),concepto:p.concepto+' (pagado)',cat:p.cat,monto:p.monto,_pendId:id});
+    window._pendPayAt = Date.now();   // arranca la ventana que protege este pago
     savePend(); saveData(); window._renderAll();
   }, '✅');
 }
@@ -2964,7 +3051,7 @@ window._renderAll=function(){
   if(active){
     if(active.id==='panel-movimientos') renderMovimientos();
     if(active.id==='panel-pendientes') renderPendientesTab();
-    if(active.id==='panel-resumen') renderResumen();
+    if(active.id==='panel-resumen'){ renderResumen(); window.pintarInfoSync && window.pintarInfoSync(); }
     if(active.id==='panel-detalle') renderDetalleList();
   }
   updateUndoButtons();
