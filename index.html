@@ -1345,6 +1345,12 @@ function getRefs(uid) {
   };
 }
 
+/* Un fallo de guardado no puede quedar en un puntito rojo que nadie mira.
+   Con cache persistente, setDoc RESUELVE apenas el dato quedo en el telefono,
+   asi que un rechazo del servidor (reglas, permisos) llega por otro lado y la
+   app parece andar mientras en realidad no sube nada. Se deja anotado el
+   ultimo error y se avisa en pantalla. */
+window._ultimoErrorSync = null;
 window._fbSave = async function(key, value) {
   if (!window._fbRefs) return;
   setSyncStatus('syncing');
@@ -1355,9 +1361,15 @@ window._fbSave = async function(key, value) {
       await setDoc(window._fbRefs[key], { v: JSON.stringify(value) });
     }
     setSyncStatus('ok');
+    window._ultimoErrorSync = null;
   } catch(e) {
     console.error('Save error', e);
     setSyncStatus('err');
+    window._ultimoErrorSync = { cuando: Date.now(), codigo: e?.code || '', mensaje: e?.message || String(e) };
+    if (e?.code === 'permission-denied') {
+      showToast && showToast('Firestore rechazo el guardado: revisa las reglas', 6000, 'err');
+    }
+    window.pintarInfoSync && window.pintarInfoSync();
   }
 };
 
@@ -1441,6 +1453,12 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     localStorage.setItem('mf_had_auth','true');
     document.getElementById('login-screen').style.display = 'none';
+    /* Se guarda con QUE cuenta quedo abierta la sesion. Si aparece un uid que
+       no es el de siempre, los datos se estan leyendo de otra carpeta y por
+       eso "no hay nada": es el sintoma de que otra app del mismo origen piso
+       la sesion. */
+    window._uidActual = user.uid;
+    window._emailActual = user.email || '';
     window._fbRefs = getRefs(user.uid);
     await loadAll(window._fbRefs);
     setupListeners(window._fbRefs);
@@ -1778,7 +1796,18 @@ window.pintarInfoSync = function() {
   if (!el) return;
   const n = Array.isArray(window._data) ? window._data.length : 0;
   const p = Array.isArray(window._pend) ? window._pend.length : 0;
-  el.textContent = 'En este telefono: ' + n + ' movimientos y ' + p + ' pendientes.';
+  const uid = window._fbRefs && window._uidActual ? window._uidActual : '(sin sesion)';
+  const err = window._ultimoErrorSync;
+  el.innerHTML =
+    'En este telefono: <b>' + n + '</b> movimientos y <b>' + p + '</b> pendientes.' +
+    '<br>Cuenta: <code style="font-size:11px">' + uid + '</code>' +
+    (err
+      ? '<br><span style="color:var(--red)">Ultimo error al guardar: ' +
+        (err.codigo || err.mensaje).slice(0, 80) +
+        (err.codigo === 'permission-denied'
+          ? '<br>Firestore esta rechazando las escrituras. Hay que revisar las reglas.'
+          : '') + '</span>'
+      : '<br><span style="opacity:.7">Sin errores de guardado.</span>');
 };
 
 // ── SAVE ──
