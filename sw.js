@@ -1,4 +1,4 @@
-const CACHE = 'mf-v9';
+const CACHE = 'mf-v10';
 const SHELL = [
   './',
   './index.html',
@@ -15,15 +15,10 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-/* Filtrar por PREFIJO, no por "todo lo que no sea CACHE".
-   caches.keys() devuelve todas las cachés del ORIGEN, y en
-   franlafuente-dev.github.io tambien vive Mi Entrenador. Sin el filtro, cada
-   app le borraba la cache a la otra en cada activacion. */
-const PREFIX = 'mf-';
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k.startsWith(PREFIX) && k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();

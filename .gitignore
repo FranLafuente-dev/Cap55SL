@@ -1,7 +1,4 @@
-# Nunca al repositorio: contiene una clave de API.
 Claude apikey.txt
 *apikey*
 *.key
-
-# Respaldo local del service worker viejo.
 sw_orig.js

@@ -1098,34 +1098,6 @@ html { scroll-behavior: smooth; }
   </button>
   <div class="card-title">Detalle del mes</div>
   <div class="card" id="res-detalle"></div>
-
-  <div class="card-title">Sincronización</div>
-  <div class="card" style="font-size:13px;line-height:1.55">
-    <div id="sync-info" style="opacity:.8;margin-bottom:12px">—</div>
-    <button class="dl-btn" style="margin:0 0 8px" onclick="descargarRespaldo()">
-      Descargar respaldo de este teléfono
-    </button>
-    <div style="opacity:.65;font-size:12px;margin:10px 0 6px">
-      Si los dos teléfonos muestran cosas distintas, hacé el respaldo en los dos
-      y después elegí en cuál están los datos buenos.
-    </div>
-    <button class="dl-btn" style="margin:0 0 8px" onclick="forzarSubida()">
-      Este teléfono tiene los datos buenos · subirlos
-    </button>
-    <button class="dl-btn" style="margin:0 0 8px" onclick="forzarBajada()">
-      Los buenos están en el otro · traerlos acá
-    </button>
-    <div style="opacity:.65;font-size:12px;margin:14px 0 6px">
-      Si algo no funciona, probá primero esto: escribe y relee contra el
-      servidor salteando la caché, y te dice exactamente qué falla.
-    </div>
-    <button class="dl-btn" style="margin:0 0 8px" onclick="probarServidor()">
-      Probar la conexión con el servidor
-    </button>
-    <button class="dl-btn" style="margin:0" onclick="cerrarSesionFinanzas()">
-      Salir y volver a entrar con mi cuenta
-    </button>
-  </div>
 </div>
 
 </div><!-- /panels-wrap -->
@@ -1298,8 +1270,8 @@ html { scroll-behavior: smooth; }
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, browserLocalPersistence, setPersistence, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, getDocFromServer, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCVlW4tvjTPrZ48_PM4sirT1uRTOP5THKI",
@@ -1313,14 +1285,7 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 let db;
-/* La caché de Firestore vive en IndexedDB con una clave que es origen +
-   proyecto. Mi Entrenador (franlafuente-dev.github.io/mi-entrenador) usa el
-   MISMO origen y el MISMO proyecto, así que las dos apps comparten ese
-   almacén. persistentLocalCache() sin tabManager lo abre en modo exclusivo:
-   con la otra app presente, esta no conseguía el permiso para sincronizar y
-   se quedaba escribiendo solo en local, sin subir nada al servidor.
-   El modo multi-pestaña coordina en vez de competir. */
-try { db = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+try { db = initializeFirestore(fbApp, { localCache: persistentLocalCache() }); }
 catch(e) { const {getFirestore:gf} = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"); db = gf(fbApp); }
 
 // Set persistence FIRST before any auth operations
@@ -1355,12 +1320,6 @@ function getRefs(uid) {
   };
 }
 
-/* Un fallo de guardado no puede quedar en un puntito rojo que nadie mira.
-   Con cache persistente, setDoc RESUELVE apenas el dato quedo en el telefono,
-   asi que un rechazo del servidor (reglas, permisos) llega por otro lado y la
-   app parece andar mientras en realidad no sube nada. Se deja anotado el
-   ultimo error y se avisa en pantalla. */
-window._ultimoErrorSync = null;
 window._fbSave = async function(key, value) {
   if (!window._fbRefs) return;
   setSyncStatus('syncing');
@@ -1371,15 +1330,9 @@ window._fbSave = async function(key, value) {
       await setDoc(window._fbRefs[key], { v: JSON.stringify(value) });
     }
     setSyncStatus('ok');
-    window._ultimoErrorSync = null;
   } catch(e) {
     console.error('Save error', e);
     setSyncStatus('err');
-    window._ultimoErrorSync = { cuando: Date.now(), codigo: e?.code || '', mensaje: e?.message || String(e) };
-    if (e?.code === 'permission-denied') {
-      showToast && showToast('Firestore rechazo el guardado: revisa las reglas', 6000, 'err');
-    }
-    window.pintarInfoSync && window.pintarInfoSync();
   }
 };
 
@@ -1423,20 +1376,9 @@ function setupListeners(refs) {
   onSnapshot(refs.data, snap => {
     if (!window._fbReady || !snap.exists()) return;
     const v = parse(snap); if (!Array.isArray(v)) return;
-    /* No pisar pagos de pendientes locales que Firestore aun no confirmo,
-       PERO SOLO POR UNOS SEGUNDOS.
-
-       Antes esta guarda no tenia limite de tiempo: si un pago local nunca
-       llegaba al servidor -exactamente lo que pasa cuando la sincronizacion
-       se corta- este telefono rechazaba TODOS los snapshots para siempre y
-       ya nunca volvia a converger con el otro. Pasada la ventana, mandan los
-       datos del servidor. */
-    const VENTANA_PAGO_MS = 90000;
-    const pagoReciente = window._pendPayAt && (Date.now() - window._pendPayAt) < VENTANA_PAGO_MS;
-    if (pagoReciente) {
-      const localPendPays = window._data.filter(d => d._pendId);
-      if (localPendPays.some(d => !v.find(s => s._pendId === d._pendId))) return;
-    }
+    // No pisar pagos de pendientes locales que Firestore aún no confirmó
+    const localPendPays = window._data.filter(d => d._pendId);
+    if (localPendPays.some(d => !v.find(s => s._pendId === d._pendId))) return;
     if (JSON.stringify(v) !== JSON.stringify(window._data)) { window._data = v; window._renderAll(); }
   });
   onSnapshot(refs.pend, snap => {
@@ -1463,12 +1405,6 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     localStorage.setItem('mf_had_auth','true');
     document.getElementById('login-screen').style.display = 'none';
-    /* Se guarda con QUE cuenta quedo abierta la sesion. Si aparece un uid que
-       no es el de siempre, los datos se estan leyendo de otra carpeta y por
-       eso "no hay nada": es el sintoma de que otra app del mismo origen piso
-       la sesion. */
-    window._uidActual = user.uid;
-    window._emailActual = user.email || '';
     window._fbRefs = getRefs(user.uid);
     await loadAll(window._fbRefs);
     setupListeners(window._fbRefs);
@@ -1477,21 +1413,15 @@ onAuthStateChanged(auth, async (user) => {
     else if (typeof window._renderAll === 'function') window._renderAll();
   } else {
     window._fbReady = false;
-    // Solo mostrar login si la app no está ya corriendo con datos de cache
-    if (!window._appInited) {
-      document.getElementById('login-screen').style.display = 'flex';
-    }
+    /* Si Firebase confirma que NO hay sesion, la pantalla de entrada tiene que
+       aparecer siempre. La condicion !_appInited que habia antes dejaba la app
+       sin ninguna forma de loguearse cuando arrancaba desde cache: se veian
+       los datos viejos y no habia manera de entrar. */
+    try { localStorage.removeItem('mf_had_auth'); } catch (e) {}
+    var _ls = document.getElementById('login-screen');
+    if (_ls) _ls.style.display = 'flex';
   }
 });
-
-/* PUENTE AL SCRIPT CLASICO.
-
-   Todo esto vive dentro de <script type="module">, asi que db, auth, setDoc,
-   doc, getDocFromServer y signOut NO existen para el <script> normal de mas
-   abajo, que es donde estan las herramientas de sincronizacion. Sin este
-   puente esas funciones tiran ReferenceError apenas se tocan: el boton
-   parece no hacer nada. */
-window._fb = { db, auth, doc, setDoc, getDoc, getDocFromServer, signOut, setSyncStatus };
 </script>
 
 <script>
@@ -1759,171 +1689,6 @@ window._saveAllToCache=function(){
   _lsSave('archive',window._archive);_lsSave('enanoLog',window._enanoLog);
   _lsSave('ahorrosLog',window._ahorrosLog);_lsSave('pochiLog',window._pochiLog);
   _lsSave('subcat',window._subcat);_lsSave('recur',window._recur);
-};
-
-/* ── RECONCILIAR DOS TELEFONOS ────────────────────────────────────────────
-   Cada documento guarda el array ENTERO, asi que el ultimo que escribe pisa
-   lo del otro. Cuando los dos telefonos quedaron con datos distintos no hay
-   forma de que el codigo adivine cual vale: lo elige el usuario. Antes de
-   cualquier cosa, respaldo. */
-window.descargarRespaldo = function() {
-  const todo = {
-    generado: new Date().toISOString(),
-    data: window._data, pend: window._pend, cats: window._cats,
-    archive: window._archive, enanoLog: window._enanoLog,
-    ahorrosLog: window._ahorrosLog, pochiLog: window._pochiLog,
-    subcat: window._subcat, recur: window._recur,
-    pochiMonto: window._pochiMonto, enanoMonto: window._enanoMonto,
-    ahorrosUSD: window._ahorrosUSD, saldoBase: window._saldoBase,
-    lastMes: window._lastMes
-  };
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(todo, null, 2)], { type: 'application/json' }));
-  a.download = 'mis-finanzas-respaldo-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.json';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-};
-
-/* SUBIR: hay que ESPERAR cada escritura y contar las que fallaron.
-   La version anterior lanzaba los setDoc sin await y cantaba "Subido" siempre,
-   aunque el servidor las hubiera rechazado todas. Mentia. */
-window.forzarSubida = function() {
-  showConfirm('Vas a subir lo de ESTE telefono al servidor.\n' +
-    'Lo que haya en el otro telefono y no este aca, se pierde.\n' +
-    'Hiciste el respaldo?', async function() {
-    if (!window._fbRefs) { showToast('No hay sesion iniciada', 5000, 'err'); return; }
-    window._fb.setSyncStatus('syncing');
-    const claves = ['data','pend','cats','archive','enanoLog','ahorrosLog','pochiLog','subcat','recur'];
-    let fallos = 0, ultimo = '';
-    for (const k of claves) {
-      try { await window._fb.setDoc(window._fbRefs[k], { v: JSON.stringify(window['_' + k]) }); }
-      catch (e) { fallos++; ultimo = e?.code || e?.message || String(e); }
-    }
-    try {
-      await window._fb.setDoc(window._fbRefs.scalars, {
-        pochiMonto: window._pochiMonto || 0, enanoMonto: window._enanoMonto || 0,
-        ahorrosUSD: window._ahorrosUSD || 0, saldoBase: window._saldoBase || 0,
-        lastMes: window._lastMes || null
-      }, { merge: true });
-    } catch (e) { fallos++; ultimo = e?.code || e?.message || String(e); }
-
-    if (fallos) {
-      window._fb.setSyncStatus('err');
-      window._ultimoErrorSync = { cuando: Date.now(), codigo: ultimo, mensaje: ultimo };
-      showToast('NO se pudo subir: ' + ultimo, 8000, 'err');
-    } else {
-      window._fb.setSyncStatus('ok');
-      window._ultimoErrorSync = null;
-      showToast('Subido de verdad. Ahora en el otro telefono: "traerlos aca".', 7000);
-    }
-    window.pintarInfoSync && window.pintarInfoSync();
-  }, '⬆️');
-};
-
-/* TRAER: hay que leer DEL SERVIDOR, no de la cache.
-   La version anterior usaba loadAll(), que hace getDoc, y con cache
-   persistente getDoc devuelve la copia LOCAL. O sea que el telefono se releia
-   a si mismo y no pasaba nada. getDocFromServer saltea la cache. */
-window.forzarBajada = function() {
-  showConfirm('Vas a descartar lo de ESTE telefono y traer lo del servidor.\n' +
-    'Lo que hayas cargado aca y no este alla, se pierde.\n' +
-    'Hiciste el respaldo?', async function() {
-    if (!window._fbRefs) { showToast('No hay sesion iniciada', 5000, 'err'); return; }
-    window._fb.setSyncStatus('syncing');
-    const r = window._fbRefs;
-    const leer = async (ref) => (await window._fb.getDocFromServer(ref));
-    try {
-      const [d,p,c,s,a,el,al,pl,sc,rc] = await Promise.all([
-        leer(r.data), leer(r.pend), leer(r.cats), leer(r.scalars), leer(r.archive),
-        leer(r.enanoLog), leer(r.ahorrosLog), leer(r.pochiLog), leer(r.subcat), leer(r.recur)
-      ]);
-      const parse = (snap) => { try { return JSON.parse(snap.data()?.v || 'null'); } catch { return null; } };
-      const dv = parse(d); if (Array.isArray(dv)) window._data = dv;
-      const pv = parse(p); if (Array.isArray(pv)) window._pend = pv;
-      const cv = parse(c); if (Array.isArray(cv) && cv.length) window._cats = cv;
-      if (s.exists()) {
-        const sd = s.data();
-        if (sd.pochiMonto != null) window._pochiMonto = parseFloat(sd.pochiMonto) || 0;
-        if (sd.enanoMonto != null) window._enanoMonto = parseFloat(sd.enanoMonto) || 0;
-        if (sd.ahorrosUSD != null) window._ahorrosUSD = parseFloat(sd.ahorrosUSD) || 0;
-        if (sd.saldoBase  != null) window._saldoBase  = parseFloat(sd.saldoBase)  || 0;
-        if (sd.lastMes) window._lastMes = sd.lastMes;
-      }
-      const av = parse(a);  if (Array.isArray(av))  window._archive    = av;
-      const ev = parse(el); if (Array.isArray(ev))  window._enanoLog   = ev;
-      const hv = parse(al); if (Array.isArray(hv))  window._ahorrosLog = hv;
-      const qv = parse(pl); if (Array.isArray(qv))  window._pochiLog   = qv;
-      const uv = parse(sc); if (uv && typeof uv === 'object' && !Array.isArray(uv)) window._subcat = uv;
-      const wv = parse(rc); if (wv && typeof wv === 'object' && !Array.isArray(wv)) window._recur  = wv;
-
-      window._pendPayAt = 0;
-      window._saveAllToCache && window._saveAllToCache();
-      window._renderAll && window._renderAll();
-      window._fb.setSyncStatus('ok');
-      window._ultimoErrorSync = null;
-      showToast('Traido del servidor: ' + (Array.isArray(window._data) ? window._data.length : 0) + ' movimientos.', 7000);
-    } catch (e) {
-      window._fb.setSyncStatus('err');
-      const cod = e?.code || e?.message || String(e);
-      window._ultimoErrorSync = { cuando: Date.now(), codigo: cod, mensaje: cod };
-      showToast('NO se pudo traer: ' + cod, 8000, 'err');
-    }
-    window.pintarInfoSync && window.pintarInfoSync();
-  }, '⬇️');
-};
-
-/* Prueba directa contra el servidor: escribe y relee salteando la cache.
-   Es la unica forma de saber si el problema es de permisos, de red, o de que
-   los dos telefonos estan mirando carpetas distintas. */
-window.probarServidor = async function() {
-  const el = document.getElementById('sync-info');
-  if (!window._fbRefs || !window._uidActual) { showToast('No hay sesion iniciada', 5000, 'err'); return; }
-  showToast('Probando contra el servidor...', 3000);
-  const ref = window._fb.doc(window._fb.db, `misfinanzas/${window._uidActual}/state/pruebaSync`);
-  const marca = Date.now();
-  let escribio = '', leyo = '';
-  try { await window._fb.setDoc(ref, { marca, desde: navigator.userAgent.slice(0, 40) }); escribio = 'OK'; }
-  catch (e) { escribio = 'FALLO: ' + (e?.code || e?.message); }
-  try {
-    const s = await window._fb.getDocFromServer(ref);
-    leyo = s.exists() && s.data().marca === marca ? 'OK' : 'el servidor devolvio otra cosa';
-  } catch (e) { leyo = 'FALLO: ' + (e?.code || e?.message); }
-  if (el) {
-    el.innerHTML += '<br><b>Prueba contra el servidor</b>' +
-      '<br>escribir: ' + escribio + '<br>releer: ' + leyo;
-  }
-  showToast('Escribir: ' + escribio + ' · Releer: ' + leyo, 9000,
-    (escribio === 'OK' && leyo === 'OK') ? '' : 'err');
-};
-
-/* Salir para volver a entrar con la cuenta correcta. Si un telefono quedo con
-   la sesion de otra app encima, este es el unico modo de corregirlo. */
-window.cerrarSesionFinanzas = function() {
-  showConfirm('Vas a salir de la cuenta en ESTE telefono.\n' +
-    'Despues entra con tu email y contrasena de siempre.\n' +
-    'Los datos del servidor no se tocan.', async function() {
-    try { await window._fb.signOut(window._fb.auth); } catch (e) {}
-    location.reload();
-  }, '🚪');
-};
-
-window.pintarInfoSync = function() {
-  const el = document.getElementById('sync-info');
-  if (!el) return;
-  const n = Array.isArray(window._data) ? window._data.length : 0;
-  const p = Array.isArray(window._pend) ? window._pend.length : 0;
-  const uid = window._fbRefs && window._uidActual ? window._uidActual : '(sin sesion)';
-  const err = window._ultimoErrorSync;
-  el.innerHTML =
-    'En este telefono: <b>' + n + '</b> movimientos y <b>' + p + '</b> pendientes.' +
-    '<br>Cuenta: <code style="font-size:11px">' + uid + '</code>' +
-    (err
-      ? '<br><span style="color:var(--red)">Ultimo error al guardar: ' +
-        (err.codigo || err.mensaje).slice(0, 80) +
-        (err.codigo === 'permission-denied'
-          ? '<br>Firestore esta rechazando las escrituras. Hay que revisar las reglas.'
-          : '') + '</span>'
-      : '<br><span style="opacity:.7">Sin errores de guardado.</span>');
 };
 
 // ── SAVE ──
@@ -2716,7 +2481,6 @@ function pagarPendiente(id) {
     haptic(60);
     p.pagado=true;
     window._data.push({id:nextId(window._data),tipo:'gasto',fecha:nowYMD(),concepto:p.concepto+' (pagado)',cat:p.cat,monto:p.monto,_pendId:id});
-    window._pendPayAt = Date.now();   // arranca la ventana que protege este pago
     savePend(); saveData(); window._renderAll();
   }, '✅');
 }
@@ -3196,7 +2960,7 @@ window._renderAll=function(){
   if(active){
     if(active.id==='panel-movimientos') renderMovimientos();
     if(active.id==='panel-pendientes') renderPendientesTab();
-    if(active.id==='panel-resumen'){ renderResumen(); window.pintarInfoSync && window.pintarInfoSync(); }
+    if(active.id==='panel-resumen') renderResumen();
     if(active.id==='panel-detalle') renderDetalleList();
   }
   updateUndoButtons();
